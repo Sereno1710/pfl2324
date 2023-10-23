@@ -1,6 +1,3 @@
-play:-
-  menu.
-
 display_game(GameState):-
   write('Let\'s play!').
 
