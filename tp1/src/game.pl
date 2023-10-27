@@ -1,9 +1,4 @@
-display_game(GameState):-
-  write('Let\'s play!').
-
 /*
-display_game(+GameState):-
-
 initial_state(+Size, -GameState):-
 
 move(+GameState, +Move, -NewGameState):-
