@@ -14,7 +14,8 @@ To run the game in both Linux and Windows environments, follow these steps:
 
 1. Install [SICStus Prolog 4.8](https://sicstus.sics.se/download4.html).
 2. Consult the `main.pl` file located in the `/src` directory by clicking on File -> Consult.
-3. Use the starting predicate `play/0` to start the program.
+3. Choose the font `FreeMono` with font size `14` in Settings -> Font.
+4. Use the starting predicate `play/0` to start the program.
 ```
 | ?- play.
 ```
