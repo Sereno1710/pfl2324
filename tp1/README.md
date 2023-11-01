@@ -4,10 +4,10 @@
 - **Game**: Tactigon
 - **Group**: 2
 
-| Student number | Full name | Contribution |
-| --- | --- | --- |
-| Daniel José de Aguiar Gago| up202108791 |50% |
-| José Miguel Sereno Santos | up202108729 |50% |
+| Student number | Full name                  | Contribution |
+| -------------- | -------------------------- | ------------ |
+| 202108791      | Daniel José de Aguiar Gago | 50%          |
+| 202108729      | José Miguel Sereno Santos  | 50%          |
 
 ## Installation and Execution
 To run the game in both Linux and Windows environments, follow these steps:
