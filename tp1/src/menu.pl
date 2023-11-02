@@ -17,13 +17,13 @@ print_menu:-
   write('Select an Option: ').
 
 process_menu_input:- 
-  get_char(Option),
+  read(Option),
   process_menu_input(Option).
 
-process_menu_input('1'):- start_game(human, human).
-process_menu_input('2'):- start_game(human, machine).
-process_menu_input('3'):- start_game(machine, human).
-process_menu_input('4'):- start_game(machine, machine).
+process_menu_input(1):- start_game(human, human).
+process_menu_input(2):- start_game(human, machine).
+process_menu_input(3):- start_game(machine, human).
+process_menu_input(4):- start_game(machine, machine).
 process_menu_input(_):- 
   write('Invalid option.'),nl,
   write('Select an Option: '),

@@ -1,8 +1,14 @@
-% display_game(+GameState)
-display_game(GameState):-
-  display_lines(GameState).
+% clear_screen
+clear_screen:- write('\33\[2J').
 
-% display_lines(+ListofLines)
+% display_game(+Board)
+display_game(Board):-
+  clear_screen, 
+  nl, nl,
+  display_lines(Board),
+  nl, nl.
+
+% display_lines(+Board)
 display_lines([]):- !.
 display_lines([NextLine | RemainingLines]):-
   display_line(NextLine),
@@ -28,26 +34,11 @@ display_line_content([]):- !.
 display_line_content([-1 | LineTail]):-
   display_line_content(LineTail).
 display_line_content([LineHead | LineTail]):-
-  get_tile_text(LineHead, TileText),
-  write('|'), write(TileText),
+  get_tile_display(LineHead, TileText),
+  format('| ~a ', [TileText]),
   display_line_content(LineTail).
 
 display_void([-1 | LineTail], -1):-
   write('  '),
   display_void(LineTail, -1).
 display_void(_, _):- !.  
-
-% get_tile_text(+TileNum, -TileText)
-get_tile_text(TileNum, TileText):-
-  Tens is TileNum // 10,
-  Units is TileNum mod 10,
-  get_tile_text(Tens, Units, TileText).
-get_tile_text(_, ' ? ').
-
-% get_tile_text(+Tens, +Units, -TileText)
-get_tile_text(2, 0, ' G ').
-get_tile_text(1, 0, '   ').
-get_tile_text(_, Units, TileText):-
-  Units >= 1, Units =< 8,
-  get_piece(Units, _, _, TileText).
-get_tile_text(_, _, ' ? ').

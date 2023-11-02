@@ -1,109 +1,75 @@
-/*
--1 - Ignore
+% start_game(+RedPlayer, +BluePlayer)
+start_game(RedPlayer, BluePlayer):-  
+  initial_state( _, GameState),
+  game_loop(GameState, RedPlayer, BluePlayer).
 
-Units:
-0 - Empty Tile
-1 - Red Pentagon
-2 - Red Square
-3 - Red Triangle
-4 - Red Circle
-5 - Blue Pentagon
-6 - Blue Square
-7 - Blue Triangle
-8 - Blue Circle
+% game_loop(+GameState, +RedPlayer, +BluePlayer)
+game_loop([Board, Turn], RedPlayer, BluePlayer):-
+  game_over(Board, Winner), !,
+  display_game(Board). 
+% TODO DISPLAY WINNER HERE
+game_loop([Board, Turn], RedPlayer, BluePlayer):-
+  display_game(Board),
+  repeat,
+  read_move(Move),
+  move([Board, Turn], Move, NewGameState).
 
-Tens:
-1 - Normal Tile
-2 - Gold Tile
-*/
-% inital_state(+Size, -GameState)
-initial_state( _ , GameState) :-
-    Board = [
-        [-1,-1,-1,-1,-1,-1,-1,-1,-1,10,-1,10,-1,-1,-1,-1,-1,-1,-1,-1,-1],
-        [-1,-1,14,-1,10,-1,14,-1,10,-1,20,-1,10,-1,18,-1,10,-1,18,-1,-1],
-        [-1,10,-1,12,-1,13,-1,10,-1,10,-1,10,-1,10,-1,17,-1,16,-1,10,-1],
-        [14,-1,13,-1,11,-1,12,-1,14,-1,10,-1,18,-1,16,-1,15,-1,17,-1,18],
-        [-1,10,-1,12,-1,13,-1,10,-1,10,-1,10,-1,10,-1,17,-1,16,-1,10,-1],
-        [-1,-1,14,-1,10,-1,14,-1,10,-1,20,-1,10,-1,18,-1,10,-1,18,-1,-1],
-        [-1,-1,-1,-1,-1,-1,-1,-1,-1,10,-1,10,-1,-1,-1,-1,-1,-1,-1,-1,-1]
-    ].
+% game_over(+GameState, -Winner).
+game_over(amogus, sus).
 
-start_game(GameState , Player1, Player2, Turn):-  
-  inital_state( _ , GameState),
-  display_game(GameState),
-  game_loop(Player1 , Player2 , Turn),
-  game_over(GameState, Winner).
+read_move([X1,Y1,X2,Y2]):-
+  read_coordinates('Source', X1-Y1),
+  read_coordinates('Destination', X2-Y2).
 
+read_coordinates(Type, X-Y):-
+  repeat,
+  format('~a coordinates (format X-Y): ', Type),
+  read(X-Y).
 
-game_loop(Player1, Player2 , Turn):-
+move(GameState, [X1,Y1,X2,Y2], NewGameState):-
+  validate_move(GameState, [X1,Y1,X2,Y2]), !,
+  execute_move(GameState, [X1,Y1,X2,Y2], NewGameState).
     
-display_game(GameState):-
+validate_move([Board, Turn], [X1,Y1,X2,Y2]):-
+  inside_board(Board, X1, Y1), !,
+  inside_board(Board, X2, Y2), !,
+  get_tile_content(Board, [X1, Y1], SourceNum),
+  get_tile_content(Board, [X2, Y2], DestinationNum),
+  valid_source(Turn, SourceNum), !,
+  valid_source(Turn, DestinationNum), !,
+  get_max_steps(SourceNum, MaxSteps),
+  valid_path([Board, Turn], [X1, Y1], [X2, Y2], MaxSteps).
 
-% get_piece(?Id, ?Piece, ?Colour, ?PieceText)
-get_piece(1, pentagon, red, ' \x2B1F\ ').
-get_piece(2, square, red, ' \x25A0\ ').
-get_piece(3, triangle, red, ' \x25B2\ ').
-get_piece(4, circle, red, ' \x25CF\ ').
+valid_source(red, SourceNum):-
+  get_units_tens(SourceNum, Units, _),
+  Units >= 1,
+  Units =< 4.
+valid_source(blue, SourceNum):-
+  get_units_tens(SourceNum, Units, _),
+  Units >= 5,
+  Units =< 8.
 
-get_piece(5, pentagon, blue, ' \x2B20\ ').
-get_piece(6, square, blue, ' \x25A1\ ').
-get_piece(7, triangle, blue, ' \x25B3\ ').
-get_piece(8, circle, blue, ' \x25CB\ ').
+valid_destination(_, DestinationNum):-
+  get_units_tens(DestinationNum, Units, _),
+  Units = 0.
+valid_destination(red, DestinationNum):-
+  get_units_tens(DestinationNum, Units, _),
+  Units >= 5,
+  Units =< 8.
+valid_destination(blue, DestinationNum):-
+  get_units_tens(DestinationNum, Units, _),
+  Units >= 1,
+  Units =< 4.
 
-get_element(X , Y , GameState , Piece):-
-    nth0(X, GameState , Row ),
-    nth0(Y, Row , Piece).
+valid_path(GameState, Source, Dest, MaxSteps):- valid_path(GameState, Source, Dest, 0, MaxSteps).
 
-adjacent(X1, Y1, X2, Y2) :-
-    (X2 is X1 + 1, Y2 is Y1 + 1; X2 is X1 + 1, Y2 is Y1 - 1).
-adjacent(X1, Y1, X2, Y2) :-
-    (X2 is X1 + 2 , Y2 is Y1; X2 is X1 - 2, Y2 is Y1).
-adjacent(X1, Y1, X2, Y2) :-
-    (X2 is X1 - 1, Y2 is Y1 + 1; X2 is X1 - 1, Y2 is Y1 - 1).
+valid_path([Board, Turn], [X1, Y1], [X2, Y2], StepCount, MaxSteps):-
+  StepCount < MaxSteps,
+  
 
-create_adjacency_list(Board, AdjList) :-
-    findall((X1, Y1, X2, Y2), (
-        between(0, 6, X1),
-        between(0, 20, Y1),
-        adjacent(X1, Y1, X2, Y2),
-    ), AdjList).
-
-bfs(AdjList, [X1, Y1], [X2, Y2], Path) :-
-    bfs_queue([[X1-Y1]], [X2-Y2], Path, AdjList).
-
-bfs_queue([[Node|Path]|_], [End|_], [Node|Path], _) :- Node = End.
-bfs_queue([Path|Paths], End, FinalPath, Graph) :-
-    Path = [Node|_],
-    findall([Neighbor, Node|Path], (member(Neighbor, Graph, _), \+ member(Neighbor, Path)), NewPaths),
-    append(Paths, NewPaths, Queue),
-    bfs_queue(Queue, End, FinalPath, Graph).
-
-
-create_adjacency_list(GameState, AdjList),
-
-
-valid_moves(Gamestate,[X1 , Y1] , [X2 , Y2] ,Player , NewGameState):-
-    X1 >= 0, Y1 >= 0, X2 >= 0 , Y2 >= 0, X1 <= 6, X2 <= 6 , Y1 <= 20 , Y2 <= 20,
-    get_element(X1,Y1, GameState , Piece),
-    Piece \= -1, Piece \= 10, Piece \= 20,
-    get_piece(Piece, Value , Turn , _),
-    Player =:= Turn,
-    create_adjacency_list(Board , AdjList),
-    bfs(AdjList, [X1,Y1], [X2,Y2], Path),
-    write(Path).
-
-
-
-move(+GameState, [X1,Y1], [X2,Y2], Player , -NewGameState):-
-    valid_moves(Gamestate,[X1 , Y1] , [X2 , Y2] ,Player , NewGameState),
-    
-
-    valid_moves(GameState).
 
 /*
 valid_moves(+GameState, +Player, -ListOfMoves):-
-
-game_over(+GameState, -Winner):-
 
 value(+GameState, +Player, -Value):-
 
