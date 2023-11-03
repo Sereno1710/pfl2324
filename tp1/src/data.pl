@@ -80,39 +80,40 @@ available_tile(Board, [X,Y] [X1,Y1]):-
   get_tile_num(Board, [X1, Y1], TileNum),
   TileNum > 0.
 
-% adj_tile(+[X,Y], +[X1,Y]) 
+% adj_tile(+[X,Y], -[X1,Y1]) 
 adj_tile([X,Y], [X1,Y]):- 
   X1 is X+2.
 
-% adj_tile(+[X,Y], +[X1,Y])   
 adj_tile([X,Y], [X1,Y]):- 
   X1 is X-2.
 
-% adj_tile(+[X,Y], +[X1,Y1])   
 adj_tile([X,Y], [X1,Y1]):- 
   X1 is X+1,
   Y1 is Y+1.
 
-% adj_tile(+[X,Y], +[X1,Y1])   
 adj_tile([X,Y], [X1,Y1]):- 
   X1 is X+1,
   Y1 is Y-1.
-
-% adj_tile(+[X,Y], +[X1,Y1])   
+ 
 adj_tile([X,Y], [X1,Y1]):- 
   X1 is X-1,
   Y1 is Y+1.
 
-% adj_tile(+[X,Y], +[X1,Y1])     
 adj_tile([X,Y], [X1,Y1]) :- 
   X1 is X-1,
   Y1 is Y-1.
+
+% compare_tile([X,Y], [X1,Y1])
+compare_tile([X,Y], [X1,Y1]):-
+  X = X1,
+  Y = Y1.
 
 % combat_outcome(+Attacker, +Defender, -Outcome)
 /*
 1 - Defender is captured
 2 - Both are captured
 */
+
 combat_outcome(pentagon, pentagon, 1).
 
 combat_outcome(square, pentagon, 1).

@@ -37,8 +37,8 @@ move(GameState, [X1,Y1,X2,Y2], NewGameState):-
 validate_move([Board, Turn], [X1,Y1,X2,Y2]):-
   inside_board(Board, X1, Y1), !,
   inside_board(Board, X2, Y2), !,
-  get_tile_content(Board, [X1, Y1], SourceNum),
-  get_tile_content(Board, [X2, Y2], DestinationNum),
+  get_tile_num(Board, [X1, Y1], SourceNum),
+  get_tile_num(Board, [X2, Y2], DestinationNum),
   valid_source(Turn, SourceNum), !,
   valid_destination(Turn, DestinationNum), !,
   get_max_steps(SourceNum, MaxSteps),
@@ -73,7 +73,10 @@ valid_path(GameState, Source, Dest, MaxSteps):- valid_path(GameState, Source, De
 % valid_path(+GameState, +Source, +Dest, +StepCount, +MaxSteps)
 valid_path([Board, Turn], [X1, Y1], [X2, Y2], StepCount, MaxSteps):-
   StepCount < MaxSteps,
-  
+  available_tile(Board, [X1, Y1], PossiblePos),
+  compare_tile(PossiblePos, [X2,Y2]), !,
+  /*get_tile_num(Board, PossiblePos, TileNum),
+  get_units_tens(TileNum, Unit, _), */
 
 
 /*
