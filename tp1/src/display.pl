@@ -19,7 +19,7 @@ display_line(Line):-
   display_void(Line, -1),
   display_line_upper_border(Line), nl,
   display_void(Line, -1),
-  display_line_content(Line), write('|'), nl.
+  display_line_content(Line), nl.
 
 % display_line_upper_border(+Line)
 display_line_upper_border([]):- !.
@@ -30,7 +30,7 @@ display_line_upper_border([_ | LineTail]):-
   display_line_upper_border(LineTail).
 
 % display_line_content(+Line)
-display_line_content([]):- !.
+display_line_content([]):- write('|').
 display_line_content([-1 | LineTail]):-
   display_line_content(LineTail).
 display_line_content([LineHead | LineTail]):-

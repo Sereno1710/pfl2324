@@ -46,7 +46,7 @@ inside_board(Board, [X, Y]):-
 get_enemy_colour(red, blue).
 get_enemy_colour(blue, red).
 
-get_units_tens(Num, Units, Tens):-
+get_units_tens(TileNum, Units, Tens):-
   Tens is TileNum // 10,
   Units is TileNum rem 10.
 
@@ -73,13 +73,6 @@ get_tile_display(_, Units, TileText):-
   get_piece(Units, _, _, TileText).
 get_tile_display(_, _, '?').
 
-% available_tile(+Board , +[X,Y], +[X1,Y1])
-available_tile(Board, [X,Y] [X1,Y1]):-
-  adj_tile([X,Y], [X1,Y1]),
-  inside_board([X1, Y1]),
-  get_tile_num(Board, [X1, Y1], TileNum),
-  TileNum > 0.
-
 % adj_tile(+[X,Y], -[X1,Y1]) 
 adj_tile([X,Y], [X1,Y]):- 
   X1 is X+2.
@@ -103,10 +96,15 @@ adj_tile([X,Y], [X1,Y1]) :-
   X1 is X-1,
   Y1 is Y-1.
 
-% compare_tile([X,Y], [X1,Y1])
-compare_tile([X,Y], [X1,Y1]):-
-  X = X1,
-  Y = Y1.
+get_move_type(_, DestNum, 1):-
+  get_units_tens(DestNum, DestUnits, _),
+  DestUnits = 0.
+get_move_type(SourceNum, DestNum, MoveType):-
+  get_units_tens(SourceNum, SourceUnits, _),
+  get_units_tens(DestNum, DestUnits, _),
+  get_piece(SourceUnits, SourcePiece, _, _),
+  get_piece(DestUnits, DestPiece, _, _),
+  combat_outcome(SourcePiece, DestPiece, MoveType).
 
 % combat_outcome(+Attacker, +Defender, -Outcome)
 /*
@@ -136,6 +134,23 @@ get_piece_max_steps(square, 4).
 get_piece_max_steps(triangle, 3).
 get_piece_max_steps(circle, 1).
 
+
+% member+(X, +[X|_], -Result1, -Result2).
+member(X,[X|_],_,_).
+member(X, [_|T], Result1, Result2):-
+        get_units_tens(X, _, Tens),
+    (
+        Tens =:= 2 -> 
+        Result1 = X,
+        member(X, T, Result2, _);
+        member(X, T, Result1, Result2)
+    ).
+
+% get_golden_tiles(+Board, -Golden_Tiles)
+get_golden_tiles(Board, [G1,G2]):- 
+    member(Row, Board),
+    member(_, Row, G1,G2).
+
 % get_piece(?Id, ?Piece, ?Colour, ?PieceDisplay)
 get_piece(1, pentagon, red, '\x2B1F\').
 get_piece(2, square, red, '\x25A0\').
@@ -146,3 +161,15 @@ get_piece(5, pentagon, blue, '\x2B20\').
 get_piece(6, square, blue, '\x25A1\').
 get_piece(7, triangle, blue, '\x25B3\').
 get_piece(8, circle, blue, '\x25CB\').
+
+% get_pentagon(+Board, -Pentagon)
+get_pentagon(Board, 18):-
+  member(Row, Board),
+  member(18, Row).
+
+
+get_pentagon(Board, 14):-
+  member(Row, Board),
+  member(14, Row).
+
+

@@ -20,7 +20,6 @@ To run the game in both Linux and Windows environments, follow these steps:
 | ?- play.
 ```
 
-
 ## Description of the Game
 
 Tactigon is turn-based 2-player board game where each side (Red and Blue) has four types of pieces. They are the Circle, the Triangle, the Square, and the Pentagon. 

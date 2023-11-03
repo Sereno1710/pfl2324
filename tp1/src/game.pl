@@ -1,3 +1,5 @@
+:- use_module(library(lists)).
+
 % start_game(+RedPlayer, +BluePlayer)
 start_game(RedPlayer, BluePlayer):-  
   initial_state( _, GameState),
@@ -12,37 +14,57 @@ game_loop([Board, Turn], RedPlayer, BluePlayer):-
   display_game(Board),
   repeat,
   read_move(Move),
-  move([Board, Turn], Move, NewGameState).
+  move([Board, Turn], Move, NewGameState),
+  game_loop(NewGameState, RedPlayer, BluePlayer).
 
 % game_over(+GameState, -Winner)
-game_over(amogus, sus).
+game_over([Board, red], Winner):-
+  \+ get_pentagon(Board, 15),
+  Winner is red.
+
+game_over([Board, red], Winner):-
+  get_golden_tiles(Board, [G1,G2]),
+  G1 =< 24,
+  G1 >= 21,
+  G2 >= 21,
+  G2 =< 24,
+  Winner is red. 
+  
+
+
+game_over([Board, blue], Winner):-
+  \+ get_pentagon(Board, 11),
+  Winner is blue.
+
+game_over([Board, Blue], Winner):-
+  get_golden_tiles(Board, [G1,G2]),
+  G1 =< 28, G1 > 24,
+  G2 =< 28, G2 > 24,
+  Winner is Blue. 
 
 % read_move(+[X1,Y1,X2,Y2])
 read_move([X1,Y1,X2,Y2]):-
   read_coordinates('Source', X1-Y1),
-  read_coordinates('Destination', X2-Y2).
+  read_coordinates('Dest', X2-Y2).
 
 % read_coordinates(+Type, +X-Y)
 read_coordinates(Type, X-Y):-
-  repeat,
   format('~a coordinates (format X-Y): ', Type),
   read(X-Y).
 
 % move(+GameState , +[X1, Y1, X2, Y2], -NewGameState)
-move(GameState, [X1,Y1,X2,Y2], NewGameState):-
-  validate_move(GameState, [X1,Y1,X2,Y2]), !,
-  execute_move(GameState, [X1,Y1,X2,Y2], NewGameState).
-    
-% validate_move(+[Board, Turn], +[X1, Y1, X2, Y2])
-validate_move([Board, Turn], [X1,Y1,X2,Y2]):-
-  inside_board(Board, X1, Y1), !,
-  inside_board(Board, X2, Y2), !,
+move([Board, Turn], [X1,Y1,X2,Y2], [NewBoard,NewTurn]):-
+  inside_board(Board, [X1, Y1]),
+  inside_board(Board, [X2, Y2]),
   get_tile_num(Board, [X1, Y1], SourceNum),
-  get_tile_num(Board, [X2, Y2], DestinationNum),
-  valid_source(Turn, SourceNum), !,
-  valid_destination(Turn, DestinationNum), !,
+  get_tile_num(Board, [X2, Y2], DestNum),
+  valid_source(Turn, SourceNum),
+  valid_destination(Turn, DestNum),
   get_max_steps(SourceNum, MaxSteps),
-  valid_path([Board, Turn], [X1, Y1], [X2, Y2], MaxSteps).
+  valid_path(Board, [X1, Y1], [X2, Y2], MaxSteps),
+  get_move_type(SourceNum, DestNum, MoveType),
+  execute_move(Board, [X1,Y1,X2,Y2], NewBoard, SourceNum, DestNum, MoveType),
+  get_enemy_colour(Turn, NewTurn).
 
 % valid_source(+Colour, +SourceNum)
 valid_source(red, SourceNum):-
@@ -54,29 +76,69 @@ valid_source(blue, SourceNum):-
   Units >= 5,
   Units =< 8.
 
-% valid_destination(+Colour, +DestinationNum)
-valid_destination(_, DestinationNum):-
-  get_units_tens(DestinationNum, Units, _),
+% valid_destination(+Colour, +DestNum)
+valid_destination(_, DestNum):-
+  get_units_tens(DestNum, Units, _),
   Units = 0.
-valid_destination(red, DestinationNum):-
-  get_units_tens(DestinationNum, Units, _),
+valid_destination(red, DestNum):-
+  get_units_tens(DestNum, Units, _),
   Units >= 5,
   Units =< 8.
-valid_destination(blue, DestinationNum):-
-  get_units_tens(DestinationNum, Units, _),
+valid_destination(blue, DestNum):-
+  get_units_tens(DestNum, Units, _),
   Units >= 1,
   Units =< 4.
 
-% valid_path(+GameState, +Source, +Dest, +MaxSteps)
-valid_path(GameState, Source, Dest, MaxSteps):- valid_path(GameState, Source, Dest, 0, MaxSteps).
+% available_tile(+Board , +[X,Y], +[X1,Y1])
+available_tile(Board, [X,Y], [X1,Y1]):-
+  adj_tile([X,Y], [X1,Y1]),
+  inside_board(Board, [X1, Y1]),
+  get_tile_num(Board, [X1, Y1], TileNum),
+  get_units_tens(TileNum, Units, _),
+  Units = 0.
 
-% valid_path(+GameState, +Source, +Dest, +StepCount, +MaxSteps)
-valid_path([Board, Turn], [X1, Y1], [X2, Y2], StepCount, MaxSteps):-
+% valid_path(+Board, +Source, +Dest, +MaxSteps)
+valid_path(Board, Source, Dest, MaxSteps):- valid_path(Board, Source, Dest, 0, MaxSteps).
+
+% valid_path(+Board, +Curr, +Dest, +StepCount, +MaxSteps)
+valid_path(_, Curr, Dest, StepCount, MaxSteps):-
   StepCount < MaxSteps,
-  available_tile(Board, [X1, Y1], PossiblePos),
-  compare_tile(PossiblePos, [X2,Y2]), !,
-  /*get_tile_num(Board, PossiblePos, TileNum),
-  get_units_tens(TileNum, Unit, _), */
+  adj_tile(Curr, Dest).
+
+valid_path(Board, Curr, Dest, StepCount, MaxSteps):-
+  StepCount < MaxSteps,
+  available_tile(Board, Curr, NewTile),
+  StepCount1 is StepCount + 1,
+  valid_path(Board, NewTile, Dest, StepCount1, MaxSteps).
+
+replace([_|T], 0, X, [X|T]).
+replace([H|T], I, X, [H|R]):- 
+  I > -1, 
+  NI is I-1, 
+  replace(T, NI, X, R), !.
+replace(L, _, _, L).
+
+execute_move(Board, [X1,Y1,X2,Y2], NewBoard, SourceNum, DestNum, 1):-
+  NewSourceNum is (SourceNum // 10) * 10,
+  nth0(Y1, Board, Row0),
+  replace(Row0, X1, NewSourceNum, NewRow0),
+  replace(Board, Y1, NewRow0, NewBoard0),
+
+  NewDestNum is ((DestNum // 10) * 10) + (SourceNum rem 10),
+  nth0(Y2, NewBoard0, Row),
+  replace(Row, X2, NewDestNum, NewRow),
+  replace(NewBoard0, Y2, NewRow, NewBoard).
+
+execute_move(Board, [X1,Y1,X2,Y2], NewBoard, SourceNum, DestNum, 2):-
+  NewSourceNum is (SourceNum // 10) * 10,
+  nth0(Y1, Board, Row0),
+  replace(Row0, X1, NewSourceNum, NewRow0),
+  replace(Board, Y1, NewRow0, NewBoard0),
+
+  NewDestNum is (DestNum // 10) * 10,
+  nth0(Y2, NewBoard0, Row),
+  replace(Row, X2, NewDestNum, NewRow),
+  replace(NewBoard0, Y2, NewRow, NewBoard).
 
 
 /*
@@ -86,21 +148,6 @@ value(+GameState, +Player, -Value):-
 
 & Level 1 should return a valid random move. Level 2 should return the best one.
 choose_move(+GameState, +Player, +Level, -Move):-
-
-
-
-
-parse_input(Input, [X1, Y1], [X2, Y2]) :-
-    atomic_list_concat([Start, End], '-', Input),
-    atom_chars(Start, [X1Char, Y1Char]),
-    atom_chars(End, [X2Char, Y2Char]),
-    atom_number(X1Char, X1),
-    atom_number(X2Char, X2),
-    atom_chars(Y1Atom, [Y1Char]),
-    atom_chars(Y2Atom, [Y2Char]),
-    Y1 = Y1Atom,
-    Y2 = Y2Atom.
-
 */
 
 

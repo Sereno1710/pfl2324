@@ -13,10 +13,11 @@ print_menu:-
   write('1. Human vs Human'), nl,
   write('2. Human vs Machine'), nl,
   write('3. Machine vs Human'), nl,
-  write('4. Machine vs Machine'), nl,
-  write('Select an Option: ').
+  write('4. Machine vs Machine'), nl.
 
-process_menu_input:- 
+process_menu_input:-
+  repeat,
+  write('Select an Option: '),
   read(Option),
   process_menu_input(Option).
 
@@ -26,7 +27,3 @@ process_menu_input(1):- start_game(human, human).
 process_menu_input(2):- start_game(human, machine).
 process_menu_input(3):- start_game(machine, human).
 process_menu_input(4):- start_game(machine, machine).
-process_menu_input(_):- 
-  write('Invalid option.'),nl,
-  write('Select an Option: '),
-  process_menu_input.
