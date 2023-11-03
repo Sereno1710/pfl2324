@@ -29,7 +29,7 @@ initial_state( _ , [Board, Turn]):-
   ],
   Turn = red.
 
-%board_size(+Board, -SizeX, -SizeY)
+% board_size(+Board, -SizeX, -SizeY)
 board_size(Board, [SizeX, SizeY]):-
   length(Board, SizeY),
   nth0(0, Board, Row),
@@ -65,6 +65,7 @@ get_tile_display(TileNum, TileText):-
   get_units_tens(TileNum, Units, Tens),
   get_tile_display(Tens, Units, TileText).
 
+% get_tile_display(? , +Units, +TileText)
 get_tile_display(2, 0, 'G').
 get_tile_display(1, 0, ' ').
 get_tile_display(_, Units, TileText):-
@@ -72,25 +73,37 @@ get_tile_display(_, Units, TileText):-
   get_piece(Units, _, _, TileText).
 get_tile_display(_, _, '?').
 
+% available_tile(+Board , +[X,Y], +[X1,Y1])
 available_tile(Board, [X,Y] [X1,Y1]):-
   adj_tile([X,Y], [X1,Y1]),
   inside_board([X1, Y1]),
   get_tile_num(Board, [X1, Y1], TileNum),
   TileNum > 0.
 
+% adj_tile(+[X,Y], +[X1,Y]) 
 adj_tile([X,Y], [X1,Y]):- 
   X1 is X+2.
+
+% adj_tile(+[X,Y], +[X1,Y])   
 adj_tile([X,Y], [X1,Y]):- 
   X1 is X-2.
+
+% adj_tile(+[X,Y], +[X1,Y1])   
 adj_tile([X,Y], [X1,Y1]):- 
   X1 is X+1,
   Y1 is Y+1.
+
+% adj_tile(+[X,Y], +[X1,Y1])   
 adj_tile([X,Y], [X1,Y1]):- 
   X1 is X+1,
   Y1 is Y-1.
+
+% adj_tile(+[X,Y], +[X1,Y1])   
 adj_tile([X,Y], [X1,Y1]):- 
   X1 is X-1,
   Y1 is Y+1.
+
+% adj_tile(+[X,Y], +[X1,Y1])     
 adj_tile([X,Y], [X1,Y1]) :- 
   X1 is X-1,
   Y1 is Y-1.

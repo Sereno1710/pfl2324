@@ -14,32 +14,37 @@ game_loop([Board, Turn], RedPlayer, BluePlayer):-
   read_move(Move),
   move([Board, Turn], Move, NewGameState).
 
-% game_over(+GameState, -Winner).
+% game_over(+GameState, -Winner)
 game_over(amogus, sus).
 
+% read_move(+[X1,Y1,X2,Y2])
 read_move([X1,Y1,X2,Y2]):-
   read_coordinates('Source', X1-Y1),
   read_coordinates('Destination', X2-Y2).
 
+% read_coordinates(+Type, +X-Y)
 read_coordinates(Type, X-Y):-
   repeat,
   format('~a coordinates (format X-Y): ', Type),
   read(X-Y).
 
+% move(+GameState , +[X1, Y1, X2, Y2], -NewGameState)
 move(GameState, [X1,Y1,X2,Y2], NewGameState):-
   validate_move(GameState, [X1,Y1,X2,Y2]), !,
   execute_move(GameState, [X1,Y1,X2,Y2], NewGameState).
     
+% validate_move(+[Board, Turn], +[X1, Y1, X2, Y2])
 validate_move([Board, Turn], [X1,Y1,X2,Y2]):-
   inside_board(Board, X1, Y1), !,
   inside_board(Board, X2, Y2), !,
   get_tile_content(Board, [X1, Y1], SourceNum),
   get_tile_content(Board, [X2, Y2], DestinationNum),
   valid_source(Turn, SourceNum), !,
-  valid_source(Turn, DestinationNum), !,
+  valid_destination(Turn, DestinationNum), !,
   get_max_steps(SourceNum, MaxSteps),
   valid_path([Board, Turn], [X1, Y1], [X2, Y2], MaxSteps).
 
+% valid_source(+Colour, +SourceNum)
 valid_source(red, SourceNum):-
   get_units_tens(SourceNum, Units, _),
   Units >= 1,
@@ -49,6 +54,7 @@ valid_source(blue, SourceNum):-
   Units >= 5,
   Units =< 8.
 
+% valid_destination(+Colour, +DestinationNum)
 valid_destination(_, DestinationNum):-
   get_units_tens(DestinationNum, Units, _),
   Units = 0.
@@ -61,8 +67,10 @@ valid_destination(blue, DestinationNum):-
   Units >= 1,
   Units =< 4.
 
+% valid_path(+GameState, +Source, +Dest, +MaxSteps)
 valid_path(GameState, Source, Dest, MaxSteps):- valid_path(GameState, Source, Dest, 0, MaxSteps).
 
+% valid_path(+GameState, +Source, +Dest, +StepCount, +MaxSteps)
 valid_path([Board, Turn], [X1, Y1], [X2, Y2], StepCount, MaxSteps):-
   StepCount < MaxSteps,
   

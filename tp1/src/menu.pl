@@ -20,6 +20,8 @@ process_menu_input:-
   read(Option),
   process_menu_input(Option).
 
+
+% process_menu_input(+Option)
 process_menu_input(1):- start_game(human, human).
 process_menu_input(2):- start_game(human, machine).
 process_menu_input(3):- start_game(machine, human).
