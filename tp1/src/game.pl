@@ -8,7 +8,8 @@ start_game(RedPlayer, BluePlayer):-
 % game_loop(+GameState, +RedPlayer, +BluePlayer)
 game_loop([Board, Turn], RedPlayer, BluePlayer):-
   game_over(Board, Winner), !,
-  display_game(Board). 
+  display_game(Board),
+  display_winner(Winner).
 % TODO DISPLAY WINNER HERE
 game_loop([Board, Turn], RedPlayer, BluePlayer):-
   display_game(Board),
@@ -21,7 +22,6 @@ game_loop([Board, Turn], RedPlayer, BluePlayer):-
 game_over([Board, red], Winner):-
   \+ get_pentagon(Board, 15),
   Winner is red.
-
 game_over([Board, red], Winner):-
   get_golden_tiles(Board, [G1,G2]),
   G1 =< 24,
@@ -29,13 +29,9 @@ game_over([Board, red], Winner):-
   G2 >= 21,
   G2 =< 24,
   Winner is red. 
-  
-
-
 game_over([Board, blue], Winner):-
   \+ get_pentagon(Board, 11),
   Winner is blue.
-
 game_over([Board, Blue], Winner):-
   get_golden_tiles(Board, [G1,G2]),
   G1 =< 28, G1 > 24,
