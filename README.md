@@ -14,11 +14,9 @@ Cada pasta (tp1 e tp2) contém os detalhes e código fonte relacionados a cada u
 
 ## Autores
 
-- Daniel Gago (lovedzhd)
-- José Santos (Sereno1710)
-
-
+- Daniel Gago (up202108791)
+- José Santos (up202108729)
 
 ---
 
-Este repositório é mantido por Daniel Gago e José Santos. Para mais informações sobre a cadeira, consulte o programa da disciplina fornecido pela FEUP.
+Este repositório é mantido por Daniel Gago e José Santos. Para mais informações sobre PFL, consulte [a página da unidade curricular](https://sigarra.up.pt/feup/pt/ucurr_geral.ficha_uc_view?pv_ocorrencia_id=520329) fornecida pela FEUP.

@@ -125,3 +125,19 @@ display_void([-1 | LineTail], -1):-
   write('  '),
   display_void(LineTail, -1).
 display_void(_, _):- !.  
+
+% get_tile_display(+TileNum, -TileText)
+get_tile_display(TileNum, TileText):-
+  get_units_tens(TileNum, Units, Tens),
+  get_tile_display(Tens, Units, TileText).
+
+% get_tile_display(? , +Units, +TileText)
+get_tile_display(2, 0, 'G').
+get_tile_display(1, 0, ' ').
+get_tile_display(_, Units, TileText):-
+  Units >= 1, Units =< 8,
+  get_piece(Units, _, _, TileText).
+get_tile_display(_, _, '?').
+
+display_winner(Winner, PlayerType):-
+  format('The winner is ~a (~a)!', [Winner, PlayerType]).
