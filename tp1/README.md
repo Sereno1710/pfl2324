@@ -99,6 +99,6 @@ Pieces that start a turn on a golden tile may move one extra space:
 | Pentagon | 6 spaces                                   |
 
 ## Bibliography
-Official Game Website - [https://tactigongame.com/how-to-play/](https://tactigongame.com/how-to-play/)
+Official Game Website - https://tactigongame.com/how-to-play/
 
-[https://www.redblobgames.com/grids/hexagons/](https://www.redblobgames.com/grids/hexagons/)
+Documentação SICSTUS - https://sicstus.sics.se/sicstus/docs/latest/html/sicstus/index.html#SEC_Contents
