@@ -5,5 +5,6 @@
 :- consult('utils.pl').
 :- consult('machine.pl').
 
+% initiates program
 play:-
   menu.

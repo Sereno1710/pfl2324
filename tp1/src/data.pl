@@ -17,6 +17,7 @@ Tens:
 2 - Gold Tile
 */
 % inital_state(+Size, -GameState)
+% initiates board as well as which player goes first.
 initial_state( _ , [Board, Turn]):-
   Board = [
     [-1,-1,-1,-1,-1,-1,-1,-1,-1,10,-1,10,-1,-1,-1,-1,-1,-1,-1,-1,-1],
@@ -33,6 +34,7 @@ initial_state( _ , [Board, Turn]):-
 get_enemy_colour(red, blue).
 get_enemy_colour(blue, red).
 
+% obtains player type(human or machine)
 get_player_type(red, RedPlayer, _, RedPlayer).
 get_player_type(blue, _, BluePlayer, BluePlayer).
 

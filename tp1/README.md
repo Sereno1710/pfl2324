@@ -102,3 +102,6 @@ Pieces that start a turn on a golden tile may move one extra space:
 Official Game Website - https://tactigongame.com/how-to-play/
 
 Documentação SICSTUS - https://sicstus.sics.se/sicstus/docs/latest/html/sicstus/index.html#SEC_Contents
+
+## Game Logic
+

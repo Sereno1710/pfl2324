@@ -1,7 +1,12 @@
+% menu/0
+% prints menu and allows users to choose what type of opponent they want to play
 menu:-
   print_menu,
   process_menu_input.
 
+
+% print_menu/0
+% prints menu
 print_menu:-
   clear_screen,
   write('  _________   __________________________  _   __'), nl,
@@ -15,6 +20,9 @@ print_menu:-
   write('3. Machine vs Human'), nl,
   write('4. Machine vs Machine'), nl.
 
+
+% process_menu_input/0
+% allows user to write the option he wants 
 process_menu_input:-
   repeat,
   write('Select an Option: '),
@@ -23,6 +31,7 @@ process_menu_input:-
 
 
 % process_menu_input(+Option)
+% depending on the option chosen, the player will play/see different types of players
 process_menu_input(1):- start_game(human, human).
 process_menu_input(2):- start_game(human, machine).
 process_menu_input(3):- start_game(machine, human).
