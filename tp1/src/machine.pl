@@ -1,6 +1,8 @@
+% valid_moves(+GameState, +Player, -ListOfMoves)
 valid_moves(GameState, _ , ListOfMoves):-
   findall([X1,Y1,X2,Y2], valid_move(GameState, [X1,Y1,X2,Y2], _, _, _), ListOfMoves).
 
+% choose_move(+GameState, +Player, +Level, -Move)
 choose_move([Board, Turn], _, 1, Move):-
   sleep(1),
   valid_moves([Board, Turn], _, ListOfMoves),

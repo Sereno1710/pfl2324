@@ -1,7 +1,7 @@
-% start_game(+CurrPlayer, +NextPlayer)
+% start_game(+CurrPlayer, +NextPlayer, +Size)
 % starts the game and creates a game loop.
-start_game(CurrPlayer, NextPlayer):-  
-  initial_state( _, GameState),
+start_game(CurrPlayer, NextPlayer,Size):-  
+  initial_state( Size , GameState),
   game_loop(GameState, CurrPlayer, NextPlayer).
 
 % game_loop(+GameState, +CurrPlayer, +NextPlayer)
@@ -123,13 +123,13 @@ check_gold_tiles([Head | Tail], blue):-
 
 
 % read_move(+[X1,Y1,X2,Y2])
-% reads user input of coordinates for the move.
+% asks user input of coordinates for the move..
 read_move([X1,Y1,X2,Y2]):-
   read_coordinates('Source', X1-Y1),
   read_coordinates('Dest', X2-Y2).
 
 % read_coordinates(+Type, +X-Y)
-% reads user input for one coordinates
+% reads user input for coordinates
 read_coordinates(Type, X-Y):-
   format('~a coordinates (format X-Y): ', Type),
   read(X-Y).

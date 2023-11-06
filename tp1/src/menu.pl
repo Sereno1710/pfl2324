@@ -32,7 +32,23 @@ process_menu_input:-
 
 % process_menu_input(+Option)
 % depending on the option chosen, the player will play/see different types of players
-process_menu_input(1):- start_game(human, human).
-process_menu_input(2):- start_game(human, machine).
-process_menu_input(3):- start_game(machine, human).
-process_menu_input(4):- start_game(machine, machine).
+process_menu_input(1):- process_board_type(human,human).
+process_menu_input(2):- process_board_type(human, machine).
+process_menu_input(3):- process_board_type(machine, human).
+process_menu_input(4):- process_board_type(machine, machine).
+
+process_board_type(Player1,Player2):-
+  
+  write('1. Small with 2 golden tiles'), nl,
+  write('2. Medium with 1 golden tile'), nl,
+  write('3. Big with 3 golden tiles'), nl,
+  write('Select a board type: '),
+  repeat,
+  read(Size),
+  process_board_type(Player1,Player2,Size).
+
+process_board_type(Player1,Player2,1):- start_game(Player1, Player2, 1).
+process_board_type(Player1,Player2,2):- start_game(Player1, Player2, 2).
+process_board_type(Player1,Player2,3):- start_game(Player1, Player2, 3).
+
+
