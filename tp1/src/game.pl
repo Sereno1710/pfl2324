@@ -90,13 +90,13 @@ check_gold_tiles([Head | Tail], blue):-
 
 
 % read_move(+X1-Y1-X2-Y2)
-% reads user input of coordinates for the move.
+% asks user input of coordinates for the move..
 read_move(X1-Y1-X2-Y2):-
   read_coordinates('Source', X1-Y1),
   read_coordinates('Dest', X2-Y2).
 
 % read_coordinates(+Type, +X-Y)
-% reads user input for one coordinates
+% reads user input for coordinates
 read_coordinates(Type, X-Y):-
   format('~a coordinates (format X-Y): ', Type),
   read(X-Y).

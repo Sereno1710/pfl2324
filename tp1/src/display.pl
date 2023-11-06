@@ -53,7 +53,7 @@ display_x_coords_arrows(SizeX, SizeX).
 display_x_coords_arrows(Count, SizeX):-
   write(' |'),
   Count1 is Count + 1,
-  display_y_coords_arrows(Count1, SizeX).
+  display_x_coords_arrows(Count1, SizeX).
 
 % display_lines(+Board)
 display_lines(Board):- 
