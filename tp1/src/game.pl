@@ -83,6 +83,7 @@ game_over([Board, blue], blue):-
   get_all_gold_tiles(Board, GoldTiles),
   check_gold_tiles(GoldTiles, blue).
 
+% find_pentagon(+Board,+Enemy)
 find_pentagon(Board, blue):- 
   member(Row, Board),
   member(15, Row).

@@ -162,7 +162,8 @@ There are two possible end game states:
 After executing **play/0** , user(s) will be presented a menu where they can choose the mode they want. <br>
 
       A- Gamemode(H vs H / H vs M / M vs H / M vs M) 
-      B- Bot Difficulty Level 
+      B- Bot Difficulty Level
+      C- Board type
 
 All these options require user input, therefore, a validation predicate was created.
 
@@ -170,29 +171,61 @@ In menu.pl, mode selection validation in the following way:
 
 ```
 % process_menu_input/0
+
 process_menu_input:-
   repeat,
   write('Select an Option: '),
   read(Option),
   process_menu_input(Option).
 
-% process_menu_input/0
-process_menu_input(1):- start_game(human, human).
-process_menu_input(2):- difficulty(human, machine).
-process_menu_input(3):- difficulty(machine, human).
-process_menu_input(4):- difficulty(machine, machine).  
+
+% process_menu_input(+Option)
+process_menu_input(1):- process_board_type(human,human).
+process_menu_input(2):- 
+  read_machine_level(Player2), 
+  process_board_type(human, Player2).
+process_menu_input(3):- 
+  read_machine_level(Player1),
+  process_board_type(Player1, human).
+process_menu_input(4):- 
+  read_machine_level(Player1),
+  read_machine_level(Player2),  
+  process_board_type(Player1, Player2).
 
 ```
 
 Bot difficulty validation is done in the following way:
 
 ```
+% read_machine_level(+Player)
+read_machine_level(Player):-
+  write('1. Easy'), nl,
+  write('2. Hard'), nl,
+  repeat,
+  write('Select a bot level: '),
+  read(Level),
+  process_machine_level(Level, Player).
 
-  Missing code
+% process_machine_level(+Level, -Player)
+process_machine_level(1, machine1).
+process_machine_level(2, machine2).
 
 ```
+Board Size validation is done in the following way:
 
-After mode and bot difficulty choice, the game is initiated by the predicate **start_game/2** found in `game.pl`.
+```
+process_board_type(Player1,Player2):-
+  
+  write('1. Small with 1 golden tile'), nl,
+  write('2. Medium with 2 golden tile'), nl,
+  write('3. Big with 3 golden tiles'), nl,
+  repeat,
+  write('Select a board type: '),
+  read(Size),
+  start_game(Player1,Player2,Size).
+
+```
+After mode, bot level and board type choice, the game is initiated by the predicate **start_game/2** found in `game.pl`.
 
 ```
   % start_game(+CurrPlayer, +NextPlayer)
@@ -272,6 +305,7 @@ game_loop([Board, Turn], machine, NextPlayer):-
   game_loop(NewGameState, NextPlayer, machine).
 
 ```
+### List of Valid Moves
 
 To validate a move, you need to adhere to the following rules:
 
@@ -298,6 +332,7 @@ After obtaining valid move, the move is executed using the **move/3** and execut
   valid_moves(GameState, _ , ListOfMoves):-
     findall(X1-Y1-X2-Y2, valid_move(GameState, X1-Y1-X2-Y2, _, _), ListOfMoves).
 ```
+### Move Execution
 
 After obtaining valid move(s), the move will be executed by **move/3** and **execute_move/6** where a newBoard will be created, after given a valid MoveType.**execute_move/6** will find the source and destination tiles, making source an empty tile, and depending on what exists in the destination tile, an empty tile or the moved piece.
 

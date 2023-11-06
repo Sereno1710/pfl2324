@@ -44,6 +44,8 @@ process_menu_input(4):-
   read_machine_level(Player2),  
   process_board_type(Player1, Player2).
 
+% read_machine_level(+Player)
+% allows user(s) to select bot level.
 read_machine_level(Player):-
   write('1. Easy'), nl,
   write('2. Hard'), nl,
@@ -52,9 +54,14 @@ read_machine_level(Player):-
   read(Level),
   process_machine_level(Level, Player).
 
+% process_machine_level(+Level, -Player)
+% based on the level, chooses the level for the bot
 process_machine_level(1, machine1).
 process_machine_level(2, machine2).
 
+
+% process_board_type(+Player1,+Player2)
+% allows user(s) to select different boards.
 process_board_type(Player1,Player2):-
   
   write('1. Small with 1 golden tile'), nl,
