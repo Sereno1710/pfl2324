@@ -83,7 +83,6 @@ display_lines([NextLine | RemainingLines], Count, MiddleY):-
   display_lines(RemainingLines, Count1, MiddleY).
 
 % display_line(+Line, +Count, +MiddleY)
-% Não sei explicar esta
 display_line(Line, Count, MiddleY):-
   Count < MiddleY, !,
   display_y_coords,
@@ -113,7 +112,7 @@ display_line(Line, Count, MiddleY):-
   display_line_lower_border(Line), nl.
 
 % display_line_upper_border(+Line)
-% displays the upper part of the hexagons.
+% displays the upper border of the hexagons.
 display_line_upper_border([]).
 display_line_upper_border([-1 | LineTail]):-
   display_line_upper_border(LineTail).
@@ -132,6 +131,7 @@ display_line_content([LineHead | LineTail]):-
   display_line_content(LineTail).
 
 % display_line_lower_border(+Line)
+% displays the lower border of the hexagons.
 display_line_lower_border([]).
 display_line_lower_border([-1 | LineTail]):-
   display_line_lower_border(LineTail).
@@ -139,6 +139,8 @@ display_line_lower_border([_ | LineTail]):-
   write(' \\ /'),
   display_line_lower_border(LineTail).
 
+% display_void(+Line)
+% ignores all -1 values from Board rows
 display_void(Line):- display_void(Line, -1).
 display_void([-1 | LineTail], -1):-
   write('  '),
@@ -146,11 +148,13 @@ display_void([-1 | LineTail], -1):-
 display_void(_, _):- !.  
 
 % get_tile_display(+TileNum, -TileText)
+% obtains tile content
 get_tile_display(TileNum, TileText):-
   get_units_tens(TileNum, Units, Tens),
   get_tile_display(Tens, Units, TileText).
 
 % get_tile_display(?TypeOfTile , +Units, +TileText)
+% obtains tile text to display. (e.g golden tile is displayed as G).
 get_tile_display(2, 0, 'G').
 get_tile_display(1, 0, ' ').
 get_tile_display(_, Units, TileText):-
@@ -158,5 +162,7 @@ get_tile_display(_, Units, TileText):-
   get_piece(Units, _, _, TileText).
 get_tile_display(_, _, '?').
 
+% display_winner(+Winner,+PlayerType)
+% displays the winner of the match as well as the type of player he is.
 display_winner(Winner, PlayerType):-
   format('The winner is ~a (~a)!', [Winner, PlayerType]).

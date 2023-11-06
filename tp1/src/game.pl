@@ -34,7 +34,7 @@ game_loop([Board, Turn], machine2, NextPlayer):-
   game_loop(NewGameState, NextPlayer, machine2).
 
 
-% valid_move(+GameState, +Move, +Source, +Dest)
+% valid_move(+GameState, +Move, -Source, -Dest, -MoveType)
 % verifies if the move is valid.
 valid_move([Board,Turn], [X1,Y1,X2,Y2], SourceNum, DestNum, MoveType):-
   valid_source([Board, Turn], [X1,Y1], SourceNum),
