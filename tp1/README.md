@@ -225,25 +225,26 @@ process_board_type(Player1,Player2):-
   start_game(Player1,Player2,Size).
 
 ```
-After mode, bot level and board type choice, the game is initiated by the predicate **start_game/2** found in `game.pl`.
+After mode, bot level and board type choice, the game is initiated by the predicate **start_game/3** found in `game.pl`.
 
 ```
-  % start_game(+CurrPlayer, +NextPlayer)
-  start_game(CurrPlayer, NextPlayer):-  
-    initial_state( _ , GameState),
+  % start_game(+CurrPlayer, +NextPlayer, Size)
+  start_game(CurrPlayer, NextPlayer, Size):-  
+    initial_state( Size , GameState),
     game_loop(GameState, CurrPlayer, NextPlayer).
 ```
 
 After initializing the GameState, the board is drawn for the first time. After each executed move, the board is displayed again using the **display_board/1** predicate found in `display.pl`.
 
 ```
-  % display_game(+Board)
-  display_game(Board):-
-    clear_screen,  % clears console
-    nl, nl,
-    display_x_coords(Board), % displays X axis
-    display_lines(Board), % displays Y axis and draws board with pieces
-    nl, nl.
+ display_game([Board,Turn]):-
+  clear_screen, 
+  nl, nl,
+  display_x_coords(Board),
+  display_lines(Board),
+  nl, nl,
+  display_turn(Turn),
+  nl, nl.
 ```
 
 To display the pieces, it was necessary to create a predicate to obtain piece information called **get_piece/4**, which can be found in `utils.pl`.
@@ -267,12 +268,12 @@ While in-game, if the selected mode involves a human player, coordinates input w
 This verification is done by the predicate **read_coordinates/2** in `game.pl`.
 
 ```
-  % read_move(+X1-Y1-X2-Y2)
-  read_move(X1-Y1-X2-Y2):-
+  % read_move(-X1-Y1-X2-Y2)
+  read_move([X1,Y1,X2,Y2]):-
     read_coordinates('Source', X1-Y1),
     read_coordinates('Dest', X2-Y2).
 
-  % read_coordinates(+Type, +X-Y)
+  % read_coordinates(+Type, -X-Y)
   read_coordinates(Type, X-Y):-
     format('~a coordinates (format X-Y): ', Type),
     read(X-Y).
@@ -284,25 +285,30 @@ This verification is done by the predicate **read_coordinates/2** in `game.pl`.
 The game works based on a loop that only stops when victory is achieved. In the **game_loop/3** in `game.pl`, users, if playing, are asked to input their moves using the **read_move/1** predicate. If user input is valid, the move is then validated using the **valid_move/4** predicate.
 
 ```
-% game_loop(+GameState, +CurrPlayer, +NextPlayer)
-game_loop([Board, Turn], CurrPlayer, NextPlayer):-
-  game_over([Board, Turn], Winner), !,
-  display_game(Board),
-  get_player_type(Winner, CurrPlayer, NextPlayer, WinnerType),
-  display_winner(Winner, WinnerType).
-game_loop([Board, Turn], human, NextPlayer):-
-  display_game(Board),
-  repeat,
-  read_move(Move),
-  move([Board, Turn], Move, NewGameState),
-  game_loop(NewGameState, NextPlayer, human).
-game_loop([Board, Turn], machine, NextPlayer):-
-  display_game(Board),
-  write('The machine is thinking...'),
-  sleep(1),
-  choose_move([Board, Turn], machine, 1, Move),
-  move([Board, Turn], Move, NewGameState),
-  game_loop(NewGameState, NextPlayer, machine).
+  % game_loop(+GameState, +CurrPlayer, +NextPlayer)
+  game_loop([Board, Turn], CurrPlayer, NextPlayer):-
+    game_over([Board, Turn], Winner), !, 
+    display_game([Board, Turn]),
+    get_player_type(Winner, CurrPlayer, NextPlayer, WinnerType),
+    display_winner(Winner, WinnerType).
+  game_loop([Board, Turn], human, NextPlayer):-
+    display_game([Board, Turn]),
+    repeat,
+    read_move(Move),
+    move([Board, Turn], Move, NewGameState),
+    game_loop(NewGameState, NextPlayer, human).
+  game_loop([Board, Turn], machine1, NextPlayer):-
+    display_game([Board, Turn]),
+    write('The machine is thinking...'),
+    choose_move([Board, Turn], _, 1, Move),
+    move([Board, Turn], Move, NewGameState),
+    game_loop(NewGameState, NextPlayer, machine1).
+  game_loop([Board, Turn], machine2, NextPlayer):-
+    display_game([Board, Turn]),
+    write('The machine is thinking...'),
+    choose_move([Board, Turn], _, 2, Move),
+    move([Board, Turn], Move, NewGameState),
+    game_loop(NewGameState, NextPlayer, machine2).
 
 ```
 ### List of Valid Moves
@@ -319,12 +325,13 @@ For players, validation is done directly after input since it is more time-effec
 After obtaining valid move, the move is executed using the **move/3** and execute_move predicates to create a new board after giving a valid MoveType.
 
 ```
-  % valid_move(+GameState, +Move, -Source, -Dest)
-  valid_move([Board,Turn], X1-Y1-X2-Y2, SourceNum, DestNum):-
+  % valid_move(+GameState, +Move, -Source, -Dest,-MoveType)
+  valid_move([Board,Turn], [X1,Y1,X2,Y2], SourceNum, DestNum, MoveType):-
     valid_source([Board, Turn], [X1,Y1], SourceNum),
     valid_destination([Board, Turn], [X2,Y2], DestNum), 
     get_max_steps(SourceNum, MaxSteps),
-    valid_path(Board, [X1, Y1], [X2, Y2], MaxSteps).
+    valid_path(Board, [X1, Y1], [X2, Y2], MaxSteps),
+    get_move_type(SourceNum, DestNum, MoveType).
 ```
 
 ```
@@ -338,15 +345,14 @@ After obtaining valid move(s), the move will be executed by **move/3** and **exe
 
 ```
   % move(+GameState , +[X1, Y1, X2, Y2], -NewGameState)
-  move([Board, Turn], X1-Y1-X2-Y2, NewGameState):-
-    valid_move([Board, Turn], X1-Y1-X2-Y2, SourceNum, DestNum),
-    get_move_type(SourceNum, DestNum, MoveType),
-    execute_move(Board, X1-Y1-X2-Y2, NewBoard, SourceNum, DestNum, MoveType),
+  move([Board, Turn], [X1,Y1,X2,Y2], NewGameState):-
+    valid_move([Board, Turn], [X1,Y1,X2,Y2], SourceNum, DestNum, MoveType),
+    execute_move(Board, [X1,Y1,X2,Y2], NewBoard, SourceNum, DestNum, MoveType),
     get_enemy_colour(Turn, NewTurn),
     NewGameState = [NewBoard, NewTurn].
 
   % execute_move(+Board, +Move, -NewBoard, +SourceNum, +DestNum. +MoveType)
-  execute_move(Board, X1-Y1-X2-Y2, NewBoard, SourceNum, DestNum, 1):-
+  execute_move(Board, [X1,Y1,X2,Y2], NewBoard, SourceNum, DestNum, 1):-
     NewSourceNum is (SourceNum // 10) * 10,
     nth0(Y1, Board, Row0),
     replace(Row0, X1, NewSourceNum, NewRow0),
@@ -355,7 +361,7 @@ After obtaining valid move(s), the move will be executed by **move/3** and **exe
     nth0(Y2, NewBoard0, Row),
     replace(Row, X2, NewDestNum, NewRow),
     replace(NewBoard0, Y2, NewRow, NewBoard).
-  execute_move(Board, X1-Y1-X2-Y2, NewBoard, SourceNum, DestNum, 2):-
+  execute_move(Board, [X1,Y1,X2,Y2], NewBoard, SourceNum, DestNum, 2):-
     NewSourceNum is (SourceNum // 10) * 10,
     nth0(Y1, Board, Row0),
     replace(Row0, X1, NewSourceNum, NewRow0),
@@ -364,6 +370,7 @@ After obtaining valid move(s), the move will be executed by **move/3** and **exe
     nth0(Y2, NewBoard0, Row),
     replace(Row, X2, NewDestNum, NewRow),
     replace(NewBoard0, Y2, NewRow, NewBoard).
+
 ```
 
 ## End of Game
@@ -371,12 +378,10 @@ After obtaining valid move(s), the move will be executed by **move/3** and **exe
 As mentioned earlier, there are two win conditions: capturing the Pentagon and occupying the Golden Tiles. In the **game_loop/3**, all possible scenarios are verified using the **game_over/2** predicate.
 ```
   % game_over(+GameState, -Winner)
-  game_over([Board, blue], red):-
-    \+ find_tile_num(Board, 15).
-    //lacks code
-  game_over([Board, red], blue):-
-    \+ find_tile_num(Board, 11).
-    //lacks code
+  game_over([Board, _], red):-
+    \+ find_pentagon(Board, blue).
+  game_over([Board, _], blue):-
+    \+ find_pentagon(Board, red).
   game_over([Board, red], red):-
     get_all_gold_tiles(Board, GoldTiles),
     check_gold_tiles(GoldTiles, red).
@@ -399,6 +404,7 @@ If a win condition is verified, the game ends and winner is displayed.
 
 
 ## Conclusion
+
 
 ## Bibliography
 Official Game Website - https://tactigongame.com/how-to-play/
