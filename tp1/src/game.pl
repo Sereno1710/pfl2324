@@ -13,18 +13,21 @@ game_loop([Board, Turn], CurrPlayer, NextPlayer):-
   display_winner(Winner, WinnerType).
 game_loop([Board, Turn], human, NextPlayer):-
   display_game([Board, Turn]),
+  display_turn(Turn),
   repeat,
   read_move(Move),
   move([Board, Turn], Move, NewGameState),
   game_loop(NewGameState, NextPlayer, human).
 game_loop([Board, Turn], machine1, NextPlayer):-
   display_game([Board, Turn]),
-  write('The machine is thinking...'),
+  display_turn(Turn), nl,
+  write('The machine is (not) thinking...'),
   choose_move([Board, Turn], _, 1, Move),
   move([Board, Turn], Move, NewGameState),
   game_loop(NewGameState, NextPlayer, machine1).
 game_loop([Board, Turn], machine2, NextPlayer):-
   display_game([Board, Turn]),
+  display_turn(Turn),
   write('The machine is thinking...'),
   choose_move([Board, Turn], _, 2, Move),
   move([Board, Turn], Move, NewGameState),
@@ -83,7 +86,8 @@ game_over([Board, blue], blue):-
   get_all_gold_tiles(Board, GoldTiles),
   check_gold_tiles(GoldTiles, blue).
 
-% find_pentagon(+Board,+Enemy)
+% find_pentagon(Board, Colour)
+% finds the pentagon of a certain colour
 find_pentagon(Board, blue):- 
   member(Row, Board),
   member(15, Row).

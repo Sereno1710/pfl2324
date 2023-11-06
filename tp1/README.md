@@ -394,14 +394,108 @@ If a win condition is verified, the game ends and winner is displayed.
 
 ## Game State Evaluation
 
+The game state evaluation is made by the `value/3` predicate, which gives a value to a certain game state based on the count of the remaining pieces and wheter or not they are on the golden tiles. If the game is over after a move, it evaluates the position as +9999 for red or -9999 for blue, depending on which one of them won the game.
+
+```
+% value(+GameState, +Player, -Value)
+value(GameState, _, Value):-
+  game_over(GameState, Winner),
+  get_game_over_value(Winner, Value).
+value([Board, _], _, Value):-
+  count_board_value(Board, Value).
+
+% count_board_value(+Board, -Value):-
+count_board_value([], 0).
+count_board_value([Head|Tail], Value):-
+  count_row_value(Head, HeadValue),
+  count_board_value(Tail, TailValue),
+  Value is HeadValue + TailValue.
+count_row_value([], 0).
+count_row_value([Head|Tail], Value):-
+  get_tile_value(Head, HeadValue),
+  count_row_value(Tail, TailValue),
+  Value is HeadValue + TailValue.
+
+get_game_over_value(red, 9999).
+get_game_over_value(blue, -9999).
+
+get_tile_value(-1, 0).
+get_tile_value(10, 0).
+get_tile_value(20, 0).
+get_tile_value(11, 0).
+get_tile_value(12, 4).
+get_tile_value(13, 5).
+get_tile_value(14, 10).
+get_tile_value(15, 0).
+get_tile_value(16, -4).
+get_tile_value(17, -5).
+get_tile_value(18, -10).
+get_tile_value(21, -50).
+get_tile_value(22, 8).
+get_tile_value(23, 10).
+get_tile_value(24, 25).
+get_tile_value(25, 50).
+get_tile_value(26, -8).
+get_tile_value(27, -10).
+get_tile_value(28, -25).
+```
 
 ## Computer Plays
 
 ### Bot Level 1
 
+The level one bot is quite simple. It simply chooses a random move from the ones available and plays it.
+
+```
+% choose_move(+GameState, +Player, +Level, -Move)
+choose_move([Board, Turn], _, 1, Move):-
+  valid_moves([Board, Turn], _, ListOfMoves),
+  random_member(Move, ListOfMoves).
+
+% valid_moves(+GameState, +Player, -ListOfMoves)
+valid_moves(GameState, _ , ListOfMoves):-
+  findall([X1,Y1,X2,Y2], valid_move(GameState, [X1,Y1,X2,Y2], _, _, _), ListOfMoves).
+
+```
 
 ### Bot Level 2
 
+The level two bot is a bit more complicated. It starts by checking all of it's possible new game states.
+
+```
+% choose_move(+GameState, +Player, +Level, -Move)
+choose_move([Board, Turn], _, 2, Move):-
+	findall(
+    Value-Movement, 
+    (
+      move([Board, Turn], Movement, NewGameState),
+      find_enemy_best_move(NewGameState, Value)
+    ),
+    MoveValues
+  ),
+  sort(MoveValues, SortedMoveValues),
+  get_best_move_value(SortedMoveValues, Turn, _-Move).
+```
+
+Then, for each possible new game state, it checks what the enemy's valuation of the position is after their best move. It ends by choosing the move which makes the enemy end up in the worst state, even if they play the best move.
+
+```
+% find_enemy_best_move(+GameState, -Valuation)
+find_enemy_best_move(GameState, Valuation):-
+  game_over(GameState, Winner),
+  get_game_over_value(Winner, Valuation).
+find_enemy_best_move([Board, Turn], Valuation):-
+  findall(
+    Value-Move, 
+    (
+      move([Board, Turn], Move, NewGameState),
+      value(NewGameState, _, Value)
+    ),
+    MoveValues
+  ),
+  sort(MoveValues, SortedMoveValues),
+  get_best_move_value(SortedMoveValues, Turn, Valuation-_).
+```
 
 ## Conclusion
 
@@ -409,7 +503,7 @@ If a win condition is verified, the game ends and winner is displayed.
 ## Bibliography
 Official Game Website - https://tactigongame.com/how-to-play/
 
-Documentação SICSTUS - https://sicstus.sics.se/sicstus/docs/latest/html/sicstus/index.html#SEC_Contents
+SICSTUS Documentation - https://sicstus.sics.se/sicstus/docs/latest/html/sicstus/index.html#SEC_Contents
 
 
 

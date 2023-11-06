@@ -3,13 +3,11 @@ clear_screen:- write('\33\[2J').
 
 % display_game(+GameState)
 % displays GameState.
-display_game([Board,Turn]):-
+display_game([Board,_]):-
   clear_screen, 
   nl, nl,
   display_x_coords(Board),
   display_lines(Board),
-  nl, nl,
-  display_turn(Turn),
   nl, nl.
 
 % display_turn(+Turn)
