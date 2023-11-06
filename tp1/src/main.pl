@@ -1,3 +1,8 @@
+:- use_module(library(lists)).
+:- use_module(library(system)).
+:- use_module(library(random)).
+:- use_module(library(between)).
+
 :- consult('game.pl').
 :- consult('menu.pl').
 :- consult('display.pl').

@@ -1,40 +1,46 @@
-:- use_module(library(lists)).
-
-% start_game(+RedType, +BlueType)
+% start_game(+CurrPlayer, +NextPlayer)
 % starts the game and creates a game loop.
-start_game(RedType, BlueType):-  
+start_game(CurrPlayer, NextPlayer):-  
   initial_state( _, GameState),
-  game_loop(GameState, RedType, BlueType).
+  game_loop(GameState, CurrPlayer, NextPlayer).
 
-% game_loop(+GameState, +RedType, +BlueType)
+% game_loop(+GameState, +CurrPlayer, +NextPlayer)
 % until one of the win conditions is verified, keeps the game in loop.
-game_loop([Board, Turn], RedType, BlueType):-
+game_loop([Board, Turn], CurrPlayer, NextPlayer):-
   game_over([Board, Turn], Winner), !,
   display_game(Board),
-  get_player_type(Winner, RedType, BlueType, WinnerType),
+  get_player_type(Winner, CurrPlayer, NextPlayer, WinnerType),
   display_winner(Winner, WinnerType).
-game_loop([Board, Turn], RedType, BlueType):-
+game_loop([Board, Turn], human, NextPlayer):-
   display_game(Board),
   repeat,
   read_move(Move),
   move([Board, Turn], Move, NewGameState),
-  game_loop(NewGameState, RedType, BlueType).
+  game_loop(NewGameState, NextPlayer, human).
+game_loop([Board, Turn], machine, NextPlayer):-
+  display_game(Board),
+  write('The machine is thinking...'),
+  sleep(1),
+  choose_move([Board, Turn], machine, 1, Move),
+  move([Board, Turn], Move, NewGameState),
+  game_loop(NewGameState, NextPlayer, machine).
 
-% validate_move(+GameState, +Move, +Source, +Dest , +MoveType)
+
+% valid_move(+GameState, +Move, +Source, +Dest)
 % verifies if the move is valid.
-validate_move([Board,Turn],[X1,Y1,X2,Y2],SourceNum,DestNum,MoveType):-
+valid_move([Board,Turn], X1-Y1-X2-Y2, SourceNum, DestNum):-
   valid_source([Board, Turn], [X1,Y1], SourceNum),
   valid_destination([Board, Turn], [X2,Y2], DestNum), 
   get_max_steps(SourceNum, MaxSteps),
-  valid_path(Board, [X1, Y1], [X2, Y2], MaxSteps),
-  get_move_type(SourceNum, DestNum, MoveType).
+  valid_path(Board, [X1, Y1], [X2, Y2], MaxSteps).
 
 
 % move(+GameState , +[X1, Y1, X2, Y2], -NewGameState)
 % if the move is valid, it is executed, modifying the board and changing turn.
-move([Board, Turn], [X1,Y1,X2,Y2], NewGameState):-
-  validate_move([Board, Turn], [X1,Y1,X2,Y2], SourceNum,DestNum, MoveType),
-  execute_move(Board, [X1,Y1,X2,Y2], NewBoard, SourceNum, DestNum, MoveType),
+move([Board, Turn], X1-Y1-X2-Y2, NewGameState):-
+  valid_move([Board, Turn], X1-Y1-X2-Y2, SourceNum, DestNum),
+  get_move_type(SourceNum, DestNum, MoveType),
+  execute_move(Board, X1-Y1-X2-Y2, NewBoard, SourceNum, DestNum, MoveType),
   get_enemy_colour(Turn, NewTurn),
   NewGameState = [NewBoard, NewTurn].
 
@@ -58,7 +64,6 @@ get_all_gold_tiles([Head|Tail], GoldTiles):-
   get_row_gold_tiles(Head, Result),
   get_all_gold_tiles(Tail, TailResult),
   append(Result, TailResult, GoldTiles).
-
 
 % get_row_gold_tiles(+Row, -GoldTiles)
 % searches the golden tiles in each row.
@@ -84,9 +89,9 @@ check_gold_tiles([Head | Tail], blue):-
   check_gold_tiles(Tail, blue).
 
 
-% read_move(+[X1,Y1,X2,Y2])
+% read_move(+X1-Y1-X2-Y2)
 % reads user input of coordinates for the move.
-read_move([X1,Y1,X2,Y2]):-
+read_move(X1-Y1-X2-Y2):-
   read_coordinates('Source', X1-Y1),
   read_coordinates('Dest', X2-Y2).
 
@@ -150,14 +155,14 @@ get_move_type(SourceNum, DestNum, MoveType):-
   get_piece(DestUnits, DestPiece, _, _),
   combat_outcome(SourcePiece, DestPiece, MoveType).
 
-% inside_board(+Board, +[X1,Y1])
+% inside_board(+Board, +[X,Y])
 % checks that coordinates are within the board.
-inside_board(Board, [X1, Y1]):-
+inside_board(Board, [X, Y]):-
   board_size(Board, [SizeX, SizeY]),
-  X1 >= 0,
-  X1 < SizeX,
-  Y1 >= 0,
-  Y1 < SizeY.
+  MaxX is SizeX - 1,
+  MaxY is SizeY - 1,
+  between(0, MaxX, X),
+  between(0, MaxY, Y).
 
 % adj_tile(+[X,Y], -[X1,Y1]) 
 % calculates all adjacent tiles from a specific tile
@@ -201,7 +206,7 @@ valid_path(Board, Curr, Dest, StepCount, MaxSteps):-
 
 % execute_move(+Board, +Move, -NewBoard, +SourceNum, +DestNum. +MoveType)
 % executes the move changing the board.
-execute_move(Board, [X1,Y1,X2,Y2], NewBoard, SourceNum, DestNum, 1):-
+execute_move(Board, X1-Y1-X2-Y2, NewBoard, SourceNum, DestNum, 1):-
   NewSourceNum is (SourceNum // 10) * 10,
   nth0(Y1, Board, Row0),
   replace(Row0, X1, NewSourceNum, NewRow0),
@@ -210,7 +215,7 @@ execute_move(Board, [X1,Y1,X2,Y2], NewBoard, SourceNum, DestNum, 1):-
   nth0(Y2, NewBoard0, Row),
   replace(Row, X2, NewDestNum, NewRow),
   replace(NewBoard0, Y2, NewRow, NewBoard).
-execute_move(Board, [X1,Y1,X2,Y2], NewBoard, SourceNum, DestNum, 2):-
+execute_move(Board, X1-Y1-X2-Y2, NewBoard, SourceNum, DestNum, 2):-
   NewSourceNum is (SourceNum // 10) * 10,
   nth0(Y1, Board, Row0),
   replace(Row0, X1, NewSourceNum, NewRow0),
