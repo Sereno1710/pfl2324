@@ -165,6 +165,8 @@ After executing **play/0** , user(s) will be presented a menu where they can cho
       B- Bot Difficulty Level
       C- Board type
 
+![Menu](menu.png)
+
 All these options require user input, therefore, a validation predicate was created.
 
 In menu.pl, mode selection validation in the following way:
