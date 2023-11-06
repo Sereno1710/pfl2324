@@ -20,42 +20,75 @@ game_loop([Board, Turn], human, NextPlayer):-
 game_loop([Board, Turn], machine, NextPlayer):-
   display_game(Board),
   write('The machine is thinking...'),
-  sleep(1),
-  choose_move([Board, Turn], machine, 1, Move),
+  choose_move([Board, Turn], _, 2, Move),
   move([Board, Turn], Move, NewGameState),
   game_loop(NewGameState, NextPlayer, machine).
 
 
 % valid_move(+GameState, +Move, +Source, +Dest)
 % verifies if the move is valid.
-valid_move([Board,Turn], X1-Y1-X2-Y2, SourceNum, DestNum):-
+valid_move([Board,Turn], [X1,Y1,X2,Y2], SourceNum, DestNum, MoveType):-
   valid_source([Board, Turn], [X1,Y1], SourceNum),
   valid_destination([Board, Turn], [X2,Y2], DestNum), 
   get_max_steps(SourceNum, MaxSteps),
-  valid_path(Board, [X1, Y1], [X2, Y2], MaxSteps).
+  valid_path(Board, [X1, Y1], [X2, Y2], MaxSteps),
+  get_move_type(SourceNum, DestNum, MoveType).
+
+% execute_move(+Board, +Move, -NewBoard, +SourceNum, +DestNum. +MoveType)
+% executes the move changing the board.
+execute_move(Board, [X1,Y1,X2,Y2], NewBoard, SourceNum, DestNum, 1):-
+  NewSourceNum is (SourceNum // 10) * 10,
+  nth0(Y1, Board, Row0),
+  replace(Row0, X1, NewSourceNum, NewRow0),
+  replace(Board, Y1, NewRow0, NewBoard0),
+  NewDestNum is ((DestNum // 10) * 10) + (SourceNum rem 10),
+  nth0(Y2, NewBoard0, Row),
+  replace(Row, X2, NewDestNum, NewRow),
+  replace(NewBoard0, Y2, NewRow, NewBoard).
+execute_move(Board, [X1,Y1,X2,Y2], NewBoard, SourceNum, DestNum, 2):-
+  NewSourceNum is (SourceNum // 10) * 10,
+  nth0(Y1, Board, Row0),
+  replace(Row0, X1, NewSourceNum, NewRow0),
+  replace(Board, Y1, NewRow0, NewBoard0),
+  NewDestNum is (DestNum // 10) * 10,
+  nth0(Y2, NewBoard0, Row),
+  replace(Row, X2, NewDestNum, NewRow),
+  replace(NewBoard0, Y2, NewRow, NewBoard).
 
 
 % move(+GameState , +[X1, Y1, X2, Y2], -NewGameState)
 % if the move is valid, it is executed, modifying the board and changing turn.
-move([Board, Turn], X1-Y1-X2-Y2, NewGameState):-
-  valid_move([Board, Turn], X1-Y1-X2-Y2, SourceNum, DestNum),
-  get_move_type(SourceNum, DestNum, MoveType),
-  execute_move(Board, X1-Y1-X2-Y2, NewBoard, SourceNum, DestNum, MoveType),
+move([Board, Turn], [X1,Y1,X2,Y2], NewGameState):-
+  valid_move([Board, Turn], [X1,Y1,X2,Y2], SourceNum, DestNum, MoveType),
+  execute_move(Board, [X1,Y1,X2,Y2], NewBoard, SourceNum, DestNum, MoveType),
   get_enemy_colour(Turn, NewTurn),
   NewGameState = [NewBoard, NewTurn].
 
 % game_over(+GameState, -Winner)
 % verifies all possible win conditions, if a players pentagon still exists or if a full turn has passed and there are two pieces of the same colour in the golden tiles.
 game_over([Board, blue], red):-
-  \+ find_tile_num(Board, 15).
+  \+ find_pentagon(Board, blue).
 game_over([Board, red], blue):-
-  \+ find_tile_num(Board, 11).
+  \+ find_pentagon(Board, red).
 game_over([Board, red], red):-
   get_all_gold_tiles(Board, GoldTiles),
   check_gold_tiles(GoldTiles, red).
 game_over([Board, blue], blue):-
   get_all_gold_tiles(Board, GoldTiles),
   check_gold_tiles(GoldTiles, blue).
+
+find_pentagon(Board, blue):- 
+  member(Row, Board),
+  member(15, Row).
+find_pentagon(Board, blue):- 
+  member(Row, Board),
+  member(25, Row).
+find_pentagon(Board, red):- 
+  member(Row, Board),
+  member(11, Row).
+find_pentagon(Board, red):- 
+  member(Row, Board),
+  member(21, Row).
 
 % get_all_gold_tiles(+Board, -GoldTiles)
 % obtains the golden tiles of the board.
@@ -89,9 +122,9 @@ check_gold_tiles([Head | Tail], blue):-
   check_gold_tiles(Tail, blue).
 
 
-% read_move(+X1-Y1-X2-Y2)
+% read_move(+[X1,Y1,X2,Y2])
 % reads user input of coordinates for the move.
-read_move(X1-Y1-X2-Y2):-
+read_move([X1,Y1,X2,Y2]):-
   read_coordinates('Source', X1-Y1),
   read_coordinates('Dest', X2-Y2).
 
@@ -203,26 +236,5 @@ valid_path(Board, Curr, Dest, StepCount, MaxSteps):-
   available_tile(Board, Curr, NewTile),
   StepCount1 is StepCount + 1,
   valid_path(Board, NewTile, Dest, StepCount1, MaxSteps).
-
-% execute_move(+Board, +Move, -NewBoard, +SourceNum, +DestNum. +MoveType)
-% executes the move changing the board.
-execute_move(Board, X1-Y1-X2-Y2, NewBoard, SourceNum, DestNum, 1):-
-  NewSourceNum is (SourceNum // 10) * 10,
-  nth0(Y1, Board, Row0),
-  replace(Row0, X1, NewSourceNum, NewRow0),
-  replace(Board, Y1, NewRow0, NewBoard0),
-  NewDestNum is ((DestNum // 10) * 10) + (SourceNum rem 10),
-  nth0(Y2, NewBoard0, Row),
-  replace(Row, X2, NewDestNum, NewRow),
-  replace(NewBoard0, Y2, NewRow, NewBoard).
-execute_move(Board, X1-Y1-X2-Y2, NewBoard, SourceNum, DestNum, 2):-
-  NewSourceNum is (SourceNum // 10) * 10,
-  nth0(Y1, Board, Row0),
-  replace(Row0, X1, NewSourceNum, NewRow0),
-  replace(Board, Y1, NewRow0, NewBoard0),
-  NewDestNum is (DestNum // 10) * 10,
-  nth0(Y2, NewBoard0, Row),
-  replace(Row, X2, NewDestNum, NewRow),
-  replace(NewBoard0, Y2, NewRow, NewBoard).
 
 

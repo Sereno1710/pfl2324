@@ -11,12 +11,6 @@ get_tile_num(Board, [X, Y], TileNum):-
   nth0(Y, Board, Row),
   nth0(X, Row , TileNum).
 
-% find_tile_num(+Board, +TileNum)
-% verified if piece still exists in board.
-find_tile_num(Board, TileNum):- 
-  member(Row, Board),
-  member(TileNum, Row).
-
 % get_units_tens(+TileNum, ?Units, ?Tens)
 % obtains the unit and the type of tile of a tile.
 get_units_tens(TileNum, Units, Tens):-
@@ -25,6 +19,7 @@ get_units_tens(TileNum, Units, Tens):-
 
 % replace(+Board, +I, +NewDestNum, -NewBoard)
 % after a move is done, it replaces the source tile and dest tile to the respective correct values.
+% this function was provided by the user fortran on stack overflow
 replace([_|T], 0, X, [X|T]).
 replace([H|T], I, X, [H|R]):- 
   I > -1, 

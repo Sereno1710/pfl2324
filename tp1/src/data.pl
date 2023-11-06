@@ -67,7 +67,6 @@ get_piece(1, pentagon, red, '\x2B1F\').
 get_piece(2, square, red, '\x25A0\').
 get_piece(3, triangle, red, '\x25B2\').
 get_piece(4, circle, red, '\x25CF\').
-
 get_piece(5, pentagon, blue, '\x2B20\').
 get_piece(6, square, blue, '\x25A1\').
 get_piece(7, triangle, blue, '\x25B3\').
