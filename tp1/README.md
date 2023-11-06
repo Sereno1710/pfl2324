@@ -165,7 +165,7 @@ After executing **play/0** , user(s) will be presented a menu where they can cho
       B- Bot Difficulty Level
       C- Board type
 
-![Menu](menu.png)
+![Menu](resources/menu.png)
 
 All these options require user input, therefore, a validation predicate was created.
 
