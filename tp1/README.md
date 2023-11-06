@@ -65,8 +65,6 @@ During initial setup, the pieces are placed according to the following diagram:
 
 - When a piece is captured, it is removed from the board and cannot return.
 
-- Squares and Pentagons cannot attack certain pieces.
-
 - The outcome of each combat is indicated by the following table:
 
 ![Combat Outcomes](resources/combat-outcomes.png)
@@ -78,30 +76,101 @@ Achieving victory can be done in 2 ways.
 1. Capturing the opposing Pentagon: if this piece is captured, the game instantly ends and the player that captured the Pentagon is the winner.
 
 2. Gold Tile Victory: occupying both golden tiles at the **end** of your opponent's turn wins the game.
-    
-### Optional Advanced Rules
 
-These are rules for players who are confortable with the basic ruleset and have enough knowledge of the game.
+## Game Logic
 
-#### Advanced Rule 1
+### Internal Game State Representation
 
-Squares can jump over other pieces, except for opposing pieces. A jumped tile still counts for the square's maximum spaces per turn. 
+Gamestate is an essential argument for all main predicates. It is composed by Board and Turn.
+The Board is a non-quadratic matrix that contains all board elements: tiles, pieces, and the number -1, meaning non-existent. 
+Board tiles are either 1 or 2 followed by unit number. Tile is 10 if it is an empty normal tile, 20 if it is golden.
 
-#### Advanced Rule 2
+RedPlayer units are numbered from 1 to 4, so BluePlayer units are numbered between 5 and 8. Being 1 and 5 pentagons, 2 and 6 squares, 3 and 7 triangles and finally 4 and 8 circles.
 
-Pieces that start a turn on a golden tile may move one extra space:
+In the board display, figures are displayed instead of numbers being Red side the black colored figures and Blue side white figures.
 
-| Piece    | Max spaces  when starting on a golden tile |
-| -------- | ------------------------------------------ |
-| Circle   | 2 spaces                                   |
-| Triangle | 4 spaces                                   |
-| Square   | 5 spaces                                   |
-| Pentagon | 6 spaces                                   |
+Turn decides which player is supposed to move. By default, RedPlayer is the first to move.
+
+**Initial Game State:**
+```
+    Board = [
+    [-1,-1,-1,-1,-1,-1,-1,-1,-1,10,-1,10,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    [-1,-1,14,-1,10,-1,14,-1,10,-1,20,-1,10,-1,18,-1,10,-1,18,-1,-1],
+    [-1,10,-1,12,-1,13,-1,10,-1,10,-1,10,-1,10,-1,17,-1,16,-1,10,-1],
+    [14,-1,13,-1,11,-1,12,-1,14,-1,10,-1,18,-1,16,-1,15,-1,17,-1,18],
+    [-1,10,-1,12,-1,13,-1,10,-1,10,-1,10,-1,10,-1,17,-1,16,-1,10,-1],
+    [-1,-1,14,-1,10,-1,14,-1,10,-1,20,-1,10,-1,18,-1,10,-1,18,-1,-1],
+    [-1,-1,-1,-1,-1,-1,-1,-1,-1,10,-1,10,-1,-1,-1,-1,-1,-1,-1,-1,-1]
+    ],
+    Turn = red.
+```
+
+
+
+![Initial Game State](resources/InitialGameState.png)
+
+
+**Middle Game State:**
+
+```
+    Board = [
+    [-1,-1,-1,-1,-1,-1,-1,-1,-1,10,-1,10,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    [-1,-1,10,-1,10,-1,12,-1,14,-1,20,-1,18,-1,10,-1,18,-1,10,-1,-1],
+    [-1,10,-1,10,-1,14,-1,14,-1,10,-1,18,-1,10,-1,17,-1,16,-1,10,-1],
+    [10,-1,13,-1,11,-1,12,-1,10,-1,10,-1,10,-1,16,-1,15,-1,17,-1,10],
+    [-1,10,-1,10,-1,13,-1,10,-1,10,-1,10,-1,16,-1,10,-1,10,-1,10,-1],
+    [-1,-1,10,-1,10,-1,14,-1,12,-1,20,-1,18,-1,10,-1,10,-1,10,-1,-1],
+    [-1,-1,-1,-1,-1,-1,-1,-1,-1,10,-1,10,-1,-1,-1,-1,-1,-1,-1,-1,-1]
+    ],
+    Turn = blue.
+```
+
+![Middle Game State](resources/MiddleGameState.png)
+
+
+**Final Game State**
+
+There are two possible end game states:
+
+  1. Capturing Pentagon
+  ```
+  Board = [
+    [-1,-1,-1,-1,-1,-1,-1,-1,-1,10,-1,10,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    [-1,-1,10,-1,10,-1,10,-1,14,-1,20,-1,17,-1,10,-1,16,-1,12,-1,-1],
+    [-1,10,-1,10,-1,10,-1,13,-1,10,-1,18,-1,10,-1,10,-1,10,-1,10,-1],
+    [10,-1,10,-1,11,-1,10,-1,14,-1,10,-1,10,-1,10,-1,10,-1,10,-1,10],
+    [-1,10,-1,10,-1,10,-1,10,-1,10,-1,10,-1,10,-1,10,-1,10,-1,10,-1],
+    [-1,-1,10,-1,10,-1,14,-1,10,-1,28,-1,10,-1,10,-1,10,-1,10,-1,-1],
+    [-1,-1,-1,-1,-1,-1,-1,-1,-1,10,-1,10,-1,-1,-1,-1,-1,-1,-1,-1,-1]
+    ]
+  ```
+  ![Capturing Pentagon](resources/CapturingPentagon.png)
+
+  2. Occupying both golden tiles after enemy turn
+  
+  ```
+  Board = [
+    [-1,-1,-1,-1,-1,-1,-1,-1,-1,10,-1,10,-1,-1,-1,-1,-1,-1,-1,-1,-1],
+    [-1,-1,10,-1,10,-1,12,-1,10,-1,24,-1,18,-1,10,-1,18,-1,10,-1,-1],
+    [-1,10,-1,10,-1,14,-1,14,-1,10,-1,10,-1,10,-1,17,-1,16,-1,10,-1],
+    [10,-1,13,-1,11,-1,12,-1,10,-1,10,-1,18,-1,16,-1,15,-1,17,-1,10],
+    [-1,10,-1,10,-1,13,-1,10,-1,10,-1,10,-1,10,-1,10,-1,10,-1,10,-1],
+    [-1,-1,10,-1,10,-1,14,-1,10,-1,22,-1,18,-1,10,-1,10,-1,16,-1,-1],
+    [-1,-1,-1,-1,-1,-1,-1,-1,-1,10,-1,10,-1,-1,-1,-1,-1,-1,-1,-1,-1]
+    ]
+  ```
+  ![Golden Tiles EndGame](resources/GoldTilesEnd.png)  
+
+
+
 
 ## Bibliography
 Official Game Website - https://tactigongame.com/how-to-play/
 
 Documentação SICSTUS - https://sicstus.sics.se/sicstus/docs/latest/html/sicstus/index.html#SEC_Contents
 
-## Game Logic
+
+
+
+
 
