@@ -8,27 +8,27 @@ choose_move([Board, Turn], _, 1, Move):-
   valid_moves([Board, Turn], _, ListOfMoves),
   random_member(Move, ListOfMoves).
 
-choose_move([Board, Turn], _, 2, Move):-
+choose_move(GameState, _, 2, Move):-
 	findall(
     Value-Movement, 
     (
-      move([Board, Turn], Movement, NewGameState),
-      find_enemy_best_move(NewGameState, 1, Value)
+      move(GameState, Movement, NewGameState),
+      find_enemy_best_move(NewGameState, Value)
     ),
     MoveValues
   ),
   sort(MoveValues, SortedMoveValues),
   get_best_move_value(SortedMoveValues, Turn, _-Move).
 
-find_enemy_best_move(GameState, 0, Value):- value(GameState, _, Value).
-find_enemy_best_move([Board, Turn], Depth, Valuation):-
-  Depth > 0,
-  Depth1 is Depth - 1,
+find_enemy_best_move(GameState, Valuation):-
+  game_over(GameState, Winner),
+  get_game_over_value(Winner, Valuation).
+find_enemy_best_move(GameState, Valuation):-
   findall(
     Value-Move, 
     (
       move([Board, Turn], Move, NewGameState),
-      find_enemy_best_move(NewGameState, Depth1, Value)
+      value(NewGameState, _, Value)
     ),
     MoveValues
   ),

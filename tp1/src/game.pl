@@ -1,28 +1,34 @@
 % start_game(+CurrPlayer, +NextPlayer, +Size)
 % starts the game and creates a game loop.
-start_game(CurrPlayer, NextPlayer,Size):-  
+start_game(CurrPlayer, NextPlayer,Size):-
   initial_state( Size , GameState),
   game_loop(GameState, CurrPlayer, NextPlayer).
 
 % game_loop(+GameState, +CurrPlayer, +NextPlayer)
 % until one of the win conditions is verified, keeps the game in loop.
 game_loop([Board, Turn], CurrPlayer, NextPlayer):-
-  game_over([Board, Turn], Winner), !,
-  display_game(Board),
+  game_over([Board, Turn], Winner), !, 
+  display_game([Board, Turn]),
   get_player_type(Winner, CurrPlayer, NextPlayer, WinnerType),
   display_winner(Winner, WinnerType).
 game_loop([Board, Turn], human, NextPlayer):-
-  display_game(Board),
+  display_game([Board, Turn]),
   repeat,
   read_move(Move),
   move([Board, Turn], Move, NewGameState),
   game_loop(NewGameState, NextPlayer, human).
-game_loop([Board, Turn], machine, NextPlayer):-
-  display_game(Board),
+game_loop([Board, Turn], machine1, NextPlayer):-
+  display_game([Board, Turn]),
+  write('The machine is thinking...'),
+  choose_move([Board, Turn], _, 1, Move),
+  move([Board, Turn], Move, NewGameState),
+  game_loop(NewGameState, NextPlayer, machine1).
+game_loop([Board, Turn], machine2, NextPlayer):-
+  display_game([Board, Turn]),
   write('The machine is thinking...'),
   choose_move([Board, Turn], _, 2, Move),
   move([Board, Turn], Move, NewGameState),
-  game_loop(NewGameState, NextPlayer, machine).
+  game_loop(NewGameState, NextPlayer, machine2).
 
 
 % valid_move(+GameState, +Move, +Source, +Dest)
@@ -66,9 +72,9 @@ move([Board, Turn], [X1,Y1,X2,Y2], NewGameState):-
 
 % game_over(+GameState, -Winner)
 % verifies all possible win conditions, if a players pentagon still exists or if a full turn has passed and there are two pieces of the same colour in the golden tiles.
-game_over([Board, blue], red):-
+game_over([Board, _], red):-
   \+ find_pentagon(Board, blue).
-game_over([Board, red], blue):-
+game_over([Board, _], blue):-
   \+ find_pentagon(Board, red).
 game_over([Board, red], red):-
   get_all_gold_tiles(Board, GoldTiles),
