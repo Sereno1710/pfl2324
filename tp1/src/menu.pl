@@ -44,6 +44,8 @@ process_menu_input(4):-
   read_machine_level(Player2),  
   process_board_type(Player1, Player2).
 
+% read_machine_level(-Player)
+% depending on the option chosen, the machine will have a different difficulty
 read_machine_level(Player):-
   write('1. Easy'), nl,
   write('2. Hard'), nl,
