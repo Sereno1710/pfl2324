@@ -1,7 +1,7 @@
 % start_game(+CurrPlayer, +NextPlayer)
 % starts the game and creates a game loop.
 start_game(CurrPlayer, NextPlayer):-  
-  initial_state( _, GameState),
+  initial_state( _ , GameState),
   game_loop(GameState, CurrPlayer, NextPlayer).
 
 % game_loop(+GameState, +CurrPlayer, +NextPlayer)

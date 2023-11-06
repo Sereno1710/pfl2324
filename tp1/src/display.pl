@@ -5,52 +5,52 @@ clear_screen:- write('\33\[2J').
 display_game(Board):-
   clear_screen, 
   nl, nl,
-  display_y_coords(Board),
+  display_x_coords(Board),
   display_lines(Board),
   nl, nl.
 
-display_x_coords:- format('~5|', []).
-display_x_coords(Count) :-
+display_y_coords:- format('~5|', []).
+display_y_coords(Count) :-
   Count >= 10,
   Count1 is Count // 10,
   Count2 is Count rem 10,
   format('~d~d - ', [Count1, Count2]).
-display_x_coords(Count) :-
+display_y_coords(Count) :-
   Count < 10,
   format(' ~d - ', [Count]).
 
 
-display_y_coords(Board):-
+display_x_coords(Board):-
   board_size(Board, [SizeX, _]),
-  display_y_coords_tens(SizeX), nl,
-  display_y_coords_units(SizeX), nl,
-  display_y_coords_arrows(SizeX), nl.
+  display_x_coords_tens(SizeX), nl,
+  display_x_coords_units(SizeX), nl,
+  display_x_coords_arrows(SizeX), nl.
 
-display_y_coords_tens(SizeX):-
+display_x_coords_tens(SizeX):-
   format('~26|', []),
-  display_y_coords_tens(10, SizeX).
-display_y_coords_tens(SizeX, SizeX).
-display_y_coords_tens(Count, SizeX):-
+  display_x_coords_tens(10, SizeX).
+display_x_coords_tens(SizeX, SizeX).
+display_x_coords_tens(Count, SizeX):-
   CountTens is Count // 10,
   format(' ~d', [CountTens]),
   Count1 is Count + 1,
-  display_y_coords_tens(Count1, SizeX).
+  display_x_coords_tens(Count1, SizeX).
 
-display_y_coords_units(SizeX):-
+display_x_coords_units(SizeX):-
   format('~6|', []),
-  display_y_coords_units(0, SizeX).
-display_y_coords_units(SizeX, SizeX).
-display_y_coords_units(Count, SizeX):-
+  display_x_coords_units(0, SizeX).
+display_x_coords_units(SizeX, SizeX).
+display_x_coords_units(Count, SizeX):-
   CountUnits is Count rem 10,
   format(' ~d', [CountUnits]),
   Count1 is Count + 1,
-  display_y_coords_units(Count1, SizeX).
+  display_x_coords_units(Count1, SizeX).
 
-display_y_coords_arrows(SizeX):-
+display_x_coords_arrows(SizeX):-
   format('~6|', []),
-  display_y_coords_arrows(0, SizeX).
-display_y_coords_arrows(SizeX, SizeX).
-display_y_coords_arrows(Count, SizeX):-
+  display_x_coords_arrows(0, SizeX).
+display_x_coords_arrows(SizeX, SizeX).
+display_x_coords_arrows(Count, SizeX):-
   write(' |'),
   Count1 is Count + 1,
   display_y_coords_arrows(Count1, SizeX).
@@ -69,29 +69,29 @@ display_lines([NextLine | RemainingLines], Count, MiddleY):-
 % display_line(+Line, Count, MiddleY)
 display_line(Line, Count, MiddleY):-
   Count < MiddleY, !,
-  display_x_coords,
+  display_y_coords,
   display_void(Line),
   display_line_upper_border(Line), nl,
-  display_x_coords(Count),
+  display_y_coords(Count),
   display_void(Line),
   display_line_content(Line), nl.
 display_line(Line, Count, MiddleY):-
   Count = MiddleY, !,
-  display_x_coords,
+  display_y_coords,
   display_void(Line),
   display_line_upper_border(Line), nl,
-  display_x_coords(Count),
+  display_y_coords(Count),
   display_void(Line),
   display_line_content(Line), nl,
-  display_x_coords,
+  display_y_coords,
   display_void(Line),
   display_line_lower_border(Line), nl.
 display_line(Line, Count, MiddleY):-
   Count > MiddleY, !,
-  display_x_coords(Count),
+  display_y_coords(Count),
   display_void(Line),
   display_line_content(Line), nl,
-  display_x_coords,
+  display_y_coords,
   display_void(Line),
   display_line_lower_border(Line), nl.
 
@@ -131,7 +131,7 @@ get_tile_display(TileNum, TileText):-
   get_units_tens(TileNum, Units, Tens),
   get_tile_display(Tens, Units, TileText).
 
-% get_tile_display(? , +Units, +TileText)
+% get_tile_display(?TypeOfTile , +Units, +TileText)
 get_tile_display(2, 0, 'G').
 get_tile_display(1, 0, ' ').
 get_tile_display(_, Units, TileText):-
