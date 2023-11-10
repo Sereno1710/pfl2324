@@ -1,22 +1,24 @@
-# Programação Funcional e em Lógica 23/24
+# Functional and Logic Programming 23/24
 
-Este repositório contém os trabalhos práticos da cadeira de Programação Funcional e em Lógica da Faculdade de Engenharia da Universidade do Porto (FEUP), no ano letivo de 2023/24. 
+This repository contains the practical assignments for the Functional and Logic Programming course at the Faculty of Engineering of the University of Porto (FEUP) in the 2023/24 academic year. 
 
-Cada pasta (tp1 e tp2) contém os detalhes e código fonte relacionados a cada um dos trabalhos práticos.
+Each folder (tp1 and tp2) contains the details and source code related to each of the practical assignments.
 
-##  Implementação de um jogo de tabuleiro em Prolog ([TP1](tp1))
+## Implementation of a board game in Prolog ([TP1](tp1))
 
-**Tema escolhido:** [Tactigon](https://tactigongame.com/)
+**Theme chosen:** [Tactigon](https://tactigongame.com/)
 
-**Descrição:** O objetivo do projeto era criar um jogo de tabuleiro para dois jogadores que permita três modos de jogo: Humano vs Humano, Humano vs Computador e Computador vs Computador. O computador possui dois níveis, sendo que o nível 1 faz movimentos à sorte e o nível 2 avalia o melhor lance de uma dada posição usando um algoritmo MiniMax.
+**Description:** The aim of the project was to create a board game for two players that allows three game modes: Human vs Human, Human vs Computer and Computer vs Computer. The computer has two levels, with level 1 making moves at random and level 2 evaluating the best move from a given position using a MiniMax algorithm.
 
-**Nota Obtida:** ?/20
+**Grade obtained:** ?/20
 
-## Autores
+## Authors
 
 - Daniel Gago (up202108791)
 - José Santos (up202108729)
 
 ---
 
-Este repositório é mantido por Daniel Gago e José Santos. Para mais informações sobre PFL, consulte [a página da unidade curricular](https://sigarra.up.pt/feup/pt/ucurr_geral.ficha_uc_view?pv_ocorrencia_id=520329) fornecida pela FEUP.
+This repository is maintained by Daniel Gago and José Santos. For more information on PFL, check out [the course unit page](https://sigarra.up.pt/feup/pt/ucurr_geral.ficha_uc_view?pv_ocorrencia_id=520329) provided by FEUP.
+
+Translated with www.DeepL.com/Translator (free version)
