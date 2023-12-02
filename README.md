@@ -20,8 +20,8 @@ Each folder (tp1 and tp2) contains the details and source code related to each o
 
 ## Authors
 
-- Daniel Gago (up202108791)
-- José Santos (up202108729)
+- Daniel Gago (lovedzhd)
+- José Santos (Sereno1710)
 
 ---
 
