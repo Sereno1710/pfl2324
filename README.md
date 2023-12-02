@@ -25,4 +25,4 @@ Each folder (tp1 and tp2) contains the details and source code related to each o
 
 ---
 
-This repository is maintained by Daniel Gago and José Santos. For more information on PFL, check out [the course unit page](https://sigarra.up.pt/feup/pt/ucurr_geral.ficha_uc_view?pv_ocorrencia_id=520329) provided by FEUP.
+This repository is maintained by Daniel Gago and José Santos. For more information on this course, check out [the course unit page](https://sigarra.up.pt/feup/pt/ucurr_geral.ficha_uc_view?pv_ocorrencia_id=520329) provided by FEUP.
