@@ -10,7 +10,7 @@ Each folder (tp1 and tp2) contains the details and source code related to each o
 
 **Description:** The aim of the project was to create a board game for two players that allows three game modes: Human vs Human, Human vs Computer and Computer vs Computer. The computer has two levels, with level 1 making moves at random and level 2 evaluating the best move from a given position using a MiniMax algorithm.
 
-**Grade obtained:** ?/20
+**Grade obtained:** 18.85/20
 
 ## Haskell compiler for an imperative programming language ([TP2](tp2))
 
