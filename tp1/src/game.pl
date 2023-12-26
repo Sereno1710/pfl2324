@@ -13,7 +13,7 @@ game_loop([Board, Turn], CurrPlayer, NextPlayer):-
   display_winner(Winner, WinnerType).
 game_loop([Board, Turn], human, NextPlayer):-
   display_game([Board, Turn]),
-  display_turn(Turn),
+  display_turn(Turn), nl,
   repeat,
   read_move(Move),
   move([Board, Turn], Move, NewGameState),
@@ -27,7 +27,7 @@ game_loop([Board, Turn], machine1, NextPlayer):-
   game_loop(NewGameState, NextPlayer, machine1).
 game_loop([Board, Turn], machine2, NextPlayer):-
   display_game([Board, Turn]),
-  display_turn(Turn),
+  display_turn(Turn), nl,
   write('The machine is thinking...'),
   choose_move([Board, Turn], _, 2, Move),
   move([Board, Turn], Move, NewGameState),

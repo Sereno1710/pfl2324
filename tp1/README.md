@@ -14,7 +14,7 @@ To run the game in both Linux and Windows environments, follow these steps:
 
 1. Install [SICStus Prolog 4.8](https://sicstus.sics.se/download4.html).
 2. Consult the `main.pl` file located in the `/src` directory by clicking on File -> Consult.
-3. If you are using Linux, choose the font `FreeMono` with font size `14` in Settings -> Font. If you are using Windows. choose the font `Cascadia Mono` with font size `14` in Settings -> Font.
+3. If you are using `Linux`, choose the font `FreeMono` with font size `14` in Settings -> Font. If you are using `Windows`. choose the font `Cascadia Mono` instead with the same font size as mentioned for linux.
 4. Use the starting predicate `play/0` to start the program.
 ```
 | ?- play.
@@ -500,6 +500,20 @@ find_enemy_best_move([Board, Turn], Valuation):-
 ```
 
 ## Conclusion
+
+Overall, we consider that the development of this program improved our understanding of logical programming and the Prolog language. However, due to time constraints, we were not able to do all of the things we wanted to do. These include, but are not limited to:
+
+- Aditional special ruleset as an option for more advanced players
+- Ability to store past games and rewatch them
+
+### Roadmap
+
+1. Improve the overall quality of the level 2 bot (it is currently very slow and plays pretty bad)
+2. Include the aditional special ruleset as an option in the menu
+    - Rule 1: Squares should jump over other pieces
+    - Rule 2: Pieces should be able to move an extra tile when standing on a gold tile
+3. Provide the ability to store past games and rewatch them
+
 
 
 ## Bibliography
