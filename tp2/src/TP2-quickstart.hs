@@ -6,7 +6,7 @@
 -- Do not modify our definition of Inst and Code
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# HLINT ignore "Eta reduce" #-}
-import Stack (Stack, push, pop, top, empty, isEmpty)
+import Data.List (intercalate)
 
 data Inst =
   Push Integer | Add | Mult | Sub | Tru | Fals | Equ | Le | And | Neg | Fetch String | Store String | Noop |
@@ -14,26 +14,29 @@ data Inst =
   deriving Show
 type Code = [Inst]
 
+type Stack = [Int]
+
+isEmpty :: Stack -> Bool
+isEmpty [] = True
+isEmpty _ = False
+
 createEmptyStack :: Stack
-createEmptyStack = empty
+createEmptyStack = []
 
---stack2Str :: Stack -> String
-stack2Str stack = undefined -- TODO
+stack2Str :: Stack -> String
+stack2Str stack = intercalate "," (map show stack)
 
-type State = (Stack, Code)
+type State = ([(String, Int)])
+
 createEmptyState :: State
-createEmptyState = (empty, [])
+createEmptyState = []
 
--- state2Str :: State -> String
-state2Str = undefined -- TODO
+state2Str :: State -> String
+state2Str state = intercalate "," (map (\(var,val) -> var ++ "=" ++ show val) state)
+
 
 -- run :: (Code, Stack, State) -> (Code, Stack, State)
 run = undefined -- TODO
-
--- To help you test your assembler
-testAssembler :: Code -> (String, String)
-testAssembler code = (stack2Str stack, state2Str state)
-  where (_,stack,state) = run (code, createEmptyStack, createEmptyState)
 
 -- Examples:
 -- testAssembler [Push 10,Push 4,Push 3,Sub,Mult] == ("-10","")
