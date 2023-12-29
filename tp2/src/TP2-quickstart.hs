@@ -6,7 +6,6 @@
 -- Do not modify our definition of Inst and Code
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# HLINT ignore "Eta reduce" #-}
-import Data.List (intercalate)
 import Stack (Stack, push, pop, top, empty, isEmpty)
 
 data Inst =
@@ -15,15 +14,15 @@ data Inst =
   deriving Show
 type Code = [Inst]
 
-createEmptyStack :: Stack.Stack()
-createEmptyStack = Stack.empty
+createEmptyStack :: Stack
+createEmptyStack = empty
 
 --stack2Str :: Stack -> String
 stack2Str stack = undefined -- TODO
 
-type State = (Stack.Stack(), Code)
+type State = (Stack, Code)
 createEmptyState :: State
-createEmptyState = (Stack.empty, [])
+createEmptyState = (empty, [])
 
 -- state2Str :: State -> String
 state2Str = undefined -- TODO

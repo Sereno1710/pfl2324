@@ -1,21 +1,28 @@
 module Stack (Stack, push, pop, top, empty, isEmpty) where
 
-data Stack a = Stk [a] deriving Show
+data StackElement = IntElement Int | BoolElement Bool deriving Show
 
-push :: a -> Stack a -> Stack a
+newtype Stack = Stk [StackElement]
+
+instance Show Stack where
+  show (Stk xs) = show xs
+
+push :: StackElement -> Stack -> Stack
 push x (Stk xs) = Stk (x:xs)
 
-pop :: Stack a -> Stack a
+pop :: Stack -> Stack
 pop (Stk (_:xs)) = Stk xs
 pop _ = error "Stack.pop: empty stack"
 
-top :: Stack a -> a
+top :: Stack -> StackElement
 top (Stk (x:_)) = x
 top _ = error "Stack.top: empty stack"
 
-empty :: Stack a
+empty :: Stack
 empty = Stk []
 
-isEmpty :: Stack a -> Bool
+isEmpty :: Stack -> Bool
 isEmpty (Stk []) = True
 isEmpty _ = False
+
+
