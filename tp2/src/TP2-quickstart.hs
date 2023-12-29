@@ -26,7 +26,7 @@ createEmptyStack = []
 stack2Str :: Stack -> String
 stack2Str stack = intercalate "," (map show stack)
 
-type State = ([(String, Int)])
+type State = [(String, Int)]
 
 createEmptyState :: State
 createEmptyState = []
@@ -36,7 +36,19 @@ state2Str state = intercalate "," (map (\(var,val) -> var ++ "=" ++ show val) st
 
 
 -- run :: (Code, Stack, State) -> (Code, Stack, State)
-run = undefined -- TODO
+run ([],stack,state) = ([],stack,state)
+run ((Push n):code,stack,state) = run (code, (fromInteger n):stack, state)
+run (Add:code,(x:y:stack),state) = run (code, (x+y):stack, state)
+run (Mult:code,(x:y:stack),state) = run (code, (x*y):stack, state)
+run (Sub:code,(x:y:stack),state) = run (code, (y-x):stack, state)
+run (Tru:code,stack,state) = run (code, 1:stack, state)
+run (Fals:code,stack,state) = run (code, 0:stack, state)
+run (Equ:code,(x:y:stack),state) = run (code, (if x==y then 1 else 0):stack, state)
+run (Le:code,(x:y:stack),state) = run (code, (if y<=x then 1 else 0):stack, state)
+run (And:code,(x:y:stack),state) = run (code, (if x==1 && y==1 then 1 else 0):stack, state)
+run (Neg:code,(x:stack),state) = run (code, (if x==1 then 0 else 1):stack, state)
+
+
 
 -- Examples:
 -- testAssembler [Push 10,Push 4,Push 3,Sub,Mult] == ("-10","")
