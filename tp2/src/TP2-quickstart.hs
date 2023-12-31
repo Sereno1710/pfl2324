@@ -106,21 +106,41 @@ data Aexp = N Integer | V String | AddA Aexp Aexp | SubA Aexp Aexp | MultA Aexp 
 
 data Bexp = IntEq Aexp Aexp | BoolEq Bexp Bexp | Leq Aexp Aexp | AndB Bexp Bexp | NegB Bexp | TruB | FalsB deriving Show
 
-data Stm = Assign String Aexp | Skip | Comp Stm Stm | If Bexp Stm Stm | While Bexp Stm deriving Show
+data Stm = If Bexp [Stm] [Stm] | While Bexp [Stm] | Assign String Aexp | AssignB String Bexp | Seq [Stm] | Skip deriving Show
 
 type Program = [Stm]
 
--- compA :: Aexp -> Code
-compA = undefined -- TODO
+compA :: Aexp -> Code
+compA (N n) = [Push n]
+compA (V x) = [Fetch x]
+compA (AddA a1 a2) = compA a1 ++ compA a2 ++ [Add]
+compA (SubA a1 a2) = compA a1 ++ compA a2 ++ [Sub]
+compA (MultA a1 a2) = compA a1 ++ compA a2 ++ [Mult]
 
--- compB :: Bexp -> Code
-compB = undefined -- TODO
 
--- compile :: Program -> Code
-compile = undefined -- TODO
+compB :: Bexp -> Code
+compB (IntEq a1 a2) = compA a1 ++ compA a2 ++ [Equ]
+compB (BoolEq b1 b2) = compB b1 ++ compB b2 ++ [Equ]
+compB (Leq a1 a2) = compA a1 ++ compA a2 ++ [Le]
+compB (AndB b1 b2) = compB b1 ++ compB b2 ++ [And]
+compB (NegB b) = compB b ++ [Neg]
+compB TruB = [Tru]
+compB FalsB = [Fals]
 
--- parse :: String -> Program
-parse = undefined -- TODO
+compile :: Program -> Code
+compile [] = []
+compile (If b s1 s2:xs) = compB b ++ [Branch (compile s1) (compile s2)] ++ compile xs
+compile (If b s1 []:xs) = compB b ++ [Branch (compile s1) [Noop]] ++ compile xs
+compile (While b s:xs) = [Loop (compB b) (compile s)] ++ compile xs
+compile (Assign x a:xs) = compA a ++ [Store x] ++ compile xs
+compile (AssignB x b:xs) = compB b ++ [Store x] ++ compile xs
+compile (Seq s:xs) = compile s ++ compile xs
+
+
+data Token = TokIf | TokThen | TokElse | TokWhile | TokDo | TokSkip | TokAssign | TokSemi | TokLParen | TokRParen | TokInt Integer | TokVar String | TokPlus | TokMinus | TokMult | TokDiv | TokEq | TokLeq | TokAnd | TokNot | TokTrue | TokFalse deriving (Show, Eq)
+
+--parse :: String -> Program
+--parse = 
 
 -- To help you test your parser
 --testParser :: String -> (String, String)
