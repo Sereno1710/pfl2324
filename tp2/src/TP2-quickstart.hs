@@ -190,22 +190,22 @@ parseProgram tokens program =
     Nothing -> error "Parse error"
 
 parseStatement :: [Token] -> Maybe (Stm, [Token])
-parseStatement (TokIf : tokens) =
-    case parseBexp tokens of
-        Just (bexp, TokThen : tokens') ->
-            case parseProgram tokens' [] of
-                Just (program1, tokens'') ->
-                    case tokens'' of
-                        (TokElse : tokens''') ->
-                            case parseProgram tokens''' [] of
-                                Just (program2, tokens'''') ->
-                                    Just (If bexp program1 program2, tokens'''')
-                                _ -> Nothing
-                        _ -> Nothing
-                _ -> Nothing
-        _ -> Nothing
-parseStatement _ = Nothing
+parseStatement (TokIf:tokens) =
+  case parseBexp tokens of
+    Just (bexp, TokThen:tokens') ->
+      case parseStatement tokens' of
+        Just (statement, TokElse:tokens'') ->
+          case parseStatement tokens'' of
+            Just (statement', tokens''') -> Just (If bexp [statement] [statement'], tokens''')
+            _ -> Nothing
+        Just (statement, tokens'') -> Just (If bexp [statement] [], tokens'') 
+    _ -> Nothing
 
+parseStatement :: [Token] -> Maybe (Stm, [Token])
+parseStatement (TokLParen:tokens) =
+  case parseStatement tokens of
+    Just (statement, TokRParen:tokens') -> Just (statement, tokens')
+    _ -> error "Parse error: expected TokRParen"
 
 
 -- To help you test your parser
