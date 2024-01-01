@@ -107,9 +107,9 @@ testAssembler code = (stack2Str stack, state2Str state)
 
 data Aexp = N Integer | V String | AddA Aexp Aexp | SubA Aexp Aexp | MultA Aexp Aexp deriving Show
 
-data Bexp = IntEq Aexp Aexp | BoolEq Bexp Bexp | Leq Aexp Aexp | AndB Bexp Bexp | NegB Bexp | TruB | FalsB deriving Show
+data Bexp = IntEq Aexp Aexp | BoolEq Bexp Bexp | Leq Aexp Aexp | AndB Bexp Bexp | NegB Bexp | TruB | FalsB | L Aexp Aexp | G Aexp Aexp | Geq Aexp Aexp deriving Show
 
-data Stm = If Bexp [Stm] [Stm] | While Bexp [Stm] | Assign String Aexp | AssignB String Bexp | Seq [Stm] | Skip deriving Show
+data Stm = If Bexp [Stm] [Stm] | While Bexp [Stm] | Assign String Aexp | AssignB String Bexp | Seq [Stm] deriving Show
 
 type Program = [Stm]
 
@@ -122,10 +122,13 @@ compA (MultA a1 a2) = compA a2 ++ compA a1 ++ [Mult]
 
 
 compB :: Bexp -> Code
-compB (IntEq a1 a2) = compA a1 ++ compA a2 ++ [Equ]
-compB (BoolEq b1 b2) = compB b1 ++ compB b2 ++ [Equ]
-compB (Leq a1 a2) = compA a1 ++ compA a2 ++ [Le]
-compB (AndB b1 b2) = compB b1 ++ compB b2 ++ [And]
+compB (IntEq a1 a2) = compA a2 ++ compA a1 ++ [Equ]
+compB (BoolEq b1 b2) = compB b2 ++ compB b1 ++ [Equ]
+compB (Leq a1 a2) = compA a2 ++ compA a1 ++ [Le]
+compB (L a1 a2) = compA a2 ++ compA a1 ++ [Le, Neg]
+compB (G a1 a2) = compA a2 ++ compA a1 ++ [Le, Neg]
+compB (Geq a1 a2) = compA a2 ++ compA a1 ++ [Le, Neg, Equ]
+compB (AndB b1 b2) = compB b2 ++ compB b1 ++ [And]
 compB (NegB b) = compB b ++ [Neg]
 compB TruB = [Tru]
 compB FalsB = [Fals]
@@ -140,52 +143,75 @@ compile (AssignB x b:xs) = compB b ++ [Store x] ++ compile xs
 compile (Seq s:xs) = compile s ++ compile xs
 
 
-data Token = TokIf | TokThen | TokElse | TokWhile | TokDo | TokAssign | TokSemi | TokLParen | TokRParen | TokInt Integer | TokVar String | TokPlus | TokMinus | TokMult | TokDiv | TokBEq | TokIEq | TokLeq | TokAnd | TokNot | TokTrue | TokFalse deriving (Show, Eq)
+data Token = TokIf | TokThen | TokElse | TokWhile | TokDo | TokAssign | TokSemi | TokLParen | TokRParen | TokInt Integer | TokVar String | TokPlus | TokMinus | TokMult | TokDiv | TokBEq | TokIEq | TokLeq | TokL | TokG| TokGeq | TokAnd | TokNot | TokTrue | TokFalse deriving (Show, Eq)
 
 lexer :: String -> [Token]
 lexer [] = []
-lexer (' ':xs) = lexer xs
-lexer ('\n':xs) = lexer xs
-lexer ('\t':xs) = lexer xs
-lexer ('\r':xs) = lexer xs
-lexer ('(':'-':xs) = lexer ('0':'-':xs)
-lexer ('(':xs) = TokLParen : lexer xs
-lexer (')':xs) = TokRParen : lexer xs
-lexer (';':xs) = TokSemi : lexer xs
-lexer ('+':xs) = TokPlus : lexer xs
-lexer ('-':xs) = TokMinus : lexer xs
-lexer ('*':xs) = TokMult : lexer xs
-lexer ('=':'=':xs) = TokBEq : lexer xs
-lexer (':':'=':xs) = TokAssign : lexer xs
-lexer ('<':'=':xs) = TokLeq : lexer xs
-lexer ('&':'&':xs) = TokAnd : lexer xs
-lexer ('!':'=':xs) = TokIEq : lexer xs
-lexer ('!':xs) = TokNot : lexer xs
-lexer ('i':'f':xs) = TokIf : lexer xs
-lexer ('t':'h':'e':'n':xs) = TokThen : lexer xs
-lexer ('e':'l':'s':'e':xs) = TokElse : lexer xs
-lexer ('w':'h':'i':'l':'e':xs) = TokWhile : lexer xs
-lexer ('d':'o':xs) = TokDo : lexer xs
-lexer ('t':'r':'u':'e':xs) = TokTrue : lexer xs
-lexer ('f':'a':'l':'s':'e':xs) = TokFalse : lexer xs
-lexer (x:xs)
-  | isDigit x = TokInt (read (x : takeWhile isDigit xs)) : lexer (dropWhile isDigit xs)
-  | isAlpha x = TokVar (x : takeWhile isAlphaNum xs) : lexer (dropWhile isAlphaNum xs)
-  | otherwise = error ("Cannot parse " ++ [x])
+lexer (' ':string) = lexer string
+lexer ('\n':string) = lexer string
+lexer ('\t':string) = lexer string
+lexer ('\r':string) = lexer string
+lexer ('(':'-':string) = lexer ('0':'-':string)
+lexer ('(':string) = TokLParen : lexer string
+lexer (')':string) = TokRParen : lexer string
+lexer (';':string) = TokSemi : lexer string
+lexer ('+':string) = TokPlus : lexer string
+lexer ('-':string) = TokMinus : lexer string
+lexer ('*':string) = TokMult : lexer string
+lexer ('=':'=':string) = TokBEq : lexer string
+lexer (':':'=':string) = TokAssign : lexer string
+lexer ('>':'=':string) = TokGeq : lexer string
+lexer ('<':'=':string) = TokLeq : lexer string
+lexer ('<':string) = TokL : lexer string
+lexer ('>':string) = TokG : lexer string
+lexer ('&':'&':string) = TokAnd : lexer string
+lexer ('!':'=':string) = TokIEq : lexer string
+lexer ('!':string) = TokNot : lexer string
+lexer ('i':'f':string) = TokIf : lexer string
+lexer ('t':'h':'e':'n':string) = TokThen : lexer string
+lexer ('e':'l':'s':'e':string) = TokElse : lexer string
+lexer ('w':'h':'i':'l':'e':string) = TokWhile : lexer string
+lexer ('d':'o':string) = TokDo : lexer string
+lexer ('t':'r':'u':'e':string) = TokTrue : lexer string
+lexer ('f':'a':'l':'s':'e':string) = TokFalse : lexer string
+lexer (char:string)
+  | isDigit char = TokInt (read (char : takeWhile isDigit string)) : lexer (dropWhile isDigit string)
+  | isAlpha char = TokVar (char : takeWhile isAlphaNum string) : lexer (dropWhile isAlphaNum string)
+  | otherwise = error ("Cannot parse " ++ [char])
 
+parse :: String -> Program
+parse text =  parseProgram (lexer text) []
 
+parseProgram :: [Token] -> Program -> Program
+parseProgram [] program = program
+parseProgram tokens program =
+  case parseStatement tokens of
+    Just (statement, tokens') -> parseProgram tokens' (program ++ [statement])
+    Nothing -> error "Parse error"
 
-
--- parse :: String -> Program
--- wparse =   
-
+parseStatement :: [Token] -> Maybe (Stm, [Token])
+parseStatement (TokIf : tokens) =
+    case parseBexp tokens of
+        Just (bexp, TokThen : tokens') ->
+            case parseProgram tokens' [] of
+                Just (program1, tokens'') ->
+                    case tokens'' of
+                        (TokElse : tokens''') ->
+                            case parseProgram tokens''' [] of
+                                Just (program2, tokens'''') ->
+                                    Just (If bexp program1 program2, tokens'''')
+                                _ -> Nothing
+                        _ -> Nothing
+                _ -> Nothing
+        _ -> Nothing
+parseStatement _ = Nothing
 
 
 
 -- To help you test your parser
---testParser :: String -> (String, String)
---testParser programCode = (stack2Str stack, state2Str state)
---  where (_,stack,state) = run(compile (parse programCode), createEmptyStack, createEmptyState)
+testParser :: String -> (String, String)
+testParser programCode = (stack2Str stack, state2Str state)
+  where (_,stack,state) = run(compile (parse programCode), createEmptyStack, createEmptyState)
 
 -- Examples:
 -- testParser "x := 5; x := x - 1;" == ("","x=4")
