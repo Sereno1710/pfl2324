@@ -122,10 +122,10 @@ compA (MultA a1 a2) = compA a2 ++ compA a1 ++ [Mult]
 
 
 compB :: Bexp -> Code
-compB (IntEq a1 a2) = compA a1 ++ compA a2 ++ [Equ]
-compB (BoolEq b1 b2) = compB b1 ++ compB b2 ++ [Equ]
-compB (Leq a1 a2) = compA a1 ++ compA a2 ++ [Le]
-compB (AndB b1 b2) = compB b1 ++ compB b2 ++ [And]
+compB (IntEq a1 a2) = compA a2 ++ compA a1 ++ [Equ]
+compB (BoolEq b1 b2) = compB b2 ++ compB b1 ++ [Equ]
+compB (Leq a1 a2) = compA a2 ++ compA a1 ++ [Le]
+compB (AndB b1 b2) = compB b2 ++ compB b1 ++ [And]
 compB (NegB b) = compB b ++ [Neg]
 compB TruB = [Tru]
 compB FalsB = [Fals]
