@@ -7,9 +7,12 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# HLINT ignore "Eta reduce" #-}
 {-# LANGUAGE BlockArguments #-}
+
 import Data.List (intercalate)
 import Data.Bool
+import Data.Char (isDigit, isAlpha, isAlphaNum)
 import qualified Data.Map as Map
+
 
 data Inst =
   Push Integer | Add | Mult | Sub | Tru | Fals | Equ | Le | And | Neg | Fetch String | Store String | Noop |
@@ -113,9 +116,9 @@ type Program = [Stm]
 compA :: Aexp -> Code
 compA (N n) = [Push n]
 compA (V x) = [Fetch x]
-compA (AddA a1 a2) = compA a1 ++ compA a2 ++ [Add]
-compA (SubA a1 a2) = compA a1 ++ compA a2 ++ [Sub]
-compA (MultA a1 a2) = compA a1 ++ compA a2 ++ [Mult]
+compA (AddA a1 a2) = compA a2 ++ compA a1 ++ [Add]
+compA (SubA a1 a2) = compA a2 ++ compA a1 ++ [Sub]
+compA (MultA a1 a2) = compA a2 ++ compA a1 ++ [Mult]
 
 
 compB :: Bexp -> Code
@@ -137,10 +140,47 @@ compile (AssignB x b:xs) = compB b ++ [Store x] ++ compile xs
 compile (Seq s:xs) = compile s ++ compile xs
 
 
-data Token = TokIf | TokThen | TokElse | TokWhile | TokDo | TokSkip | TokAssign | TokSemi | TokLParen | TokRParen | TokInt Integer | TokVar String | TokPlus | TokMinus | TokMult | TokDiv | TokEq | TokLeq | TokAnd | TokNot | TokTrue | TokFalse deriving (Show, Eq)
+data Token = TokIf | TokThen | TokElse | TokWhile | TokDo | TokAssign | TokSemi | TokLParen | TokRParen | TokInt Integer | TokVar String | TokPlus | TokMinus | TokMult | TokDiv | TokBEq | TokIEq | TokLeq | TokAnd | TokNot | TokTrue | TokFalse deriving (Show, Eq)
 
---parse :: String -> Program
---parse = 
+lexer :: String -> [Token]
+lexer [] = []
+lexer (' ':xs) = lexer xs
+lexer ('\n':xs) = lexer xs
+lexer ('\t':xs) = lexer xs
+lexer ('\r':xs) = lexer xs
+lexer ('(':'-':xs) = lexer ('0':'-':xs)
+lexer ('(':xs) = TokLParen : lexer xs
+lexer (')':xs) = TokRParen : lexer xs
+lexer (';':xs) = TokSemi : lexer xs
+lexer ('+':xs) = TokPlus : lexer xs
+lexer ('-':xs) = TokMinus : lexer xs
+lexer ('*':xs) = TokMult : lexer xs
+lexer ('=':'=':xs) = TokBEq : lexer xs
+lexer (':':'=':xs) = TokAssign : lexer xs
+lexer ('<':'=':xs) = TokLeq : lexer xs
+lexer ('&':'&':xs) = TokAnd : lexer xs
+lexer ('!':'=':xs) = TokIEq : lexer xs
+lexer ('!':xs) = TokNot : lexer xs
+lexer ('i':'f':xs) = TokIf : lexer xs
+lexer ('t':'h':'e':'n':xs) = TokThen : lexer xs
+lexer ('e':'l':'s':'e':xs) = TokElse : lexer xs
+lexer ('w':'h':'i':'l':'e':xs) = TokWhile : lexer xs
+lexer ('d':'o':xs) = TokDo : lexer xs
+lexer ('t':'r':'u':'e':xs) = TokTrue : lexer xs
+lexer ('f':'a':'l':'s':'e':xs) = TokFalse : lexer xs
+lexer (x:xs)
+  | isDigit x = TokInt (read (x : takeWhile isDigit xs)) : lexer (dropWhile isDigit xs)
+  | isAlpha x = TokVar (x : takeWhile isAlphaNum xs) : lexer (dropWhile isAlphaNum xs)
+  | otherwise = error ("Cannot parse " ++ [x])
+
+
+
+
+-- parse :: String -> Program
+-- wparse =   
+
+
+
 
 -- To help you test your parser
 --testParser :: String -> (String, String)
