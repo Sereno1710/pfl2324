@@ -173,8 +173,8 @@ lexer (';':string) = TokSemi : lexer string
 lexer ('+':string) = TokPlus : lexer string
 lexer ('-':string) = TokMinus : lexer string
 lexer ('*':string) = TokMult : lexer string
-lexer ('=': string) = TokBEq : lexer string
 lexer ('=':'=':string) = TokIEq : lexer string
+lexer ('=': string) = TokBEq : lexer string
 lexer (':':'=':string) = TokAssign : lexer string
 lexer ('>':'=':string) = TokGeq : lexer string
 lexer ('<':'=':string) = TokLeq : lexer string
@@ -202,7 +202,7 @@ parse text =  parseProgram (lexer text) []
 parseProgram :: [Token] -> Program -> Program
 parseProgram [] program = program
 parseProgram tokens program =
-  case parseNext tokens of
+  case parseStm tokens of
     Just (statement, restTokens) -> parseProgram restTokens (program ++ [statement])
     Nothing -> error "Parse error"
 
@@ -262,7 +262,6 @@ parseNot tokens =
   case parseLEq tokens of
     Just (expr1, TokNot : restTokens) -> Just (NegB expr1, restTokens)
     expr -> expr
-parseNot tokens = parseLEq tokens
 
 
 parseBEq :: [Token] -> Maybe (Bexp, [Token])
@@ -283,29 +282,31 @@ parseAndB tokens =
         Nothing -> Nothing 
     expr -> expr
 
-parseNext :: [Token] -> Maybe (Stm, [Token])
-parseNext (TokVar n : TokAssign : restTokens) =
+parseStm :: [Token] -> Maybe (Stm, [Token])
+parseStm (TokVar n : TokAssign : restTokens) =
   case parseAdd restTokens of
     Just (aExp, TokSemi : restTokens1) ->
       Just (Assign n aExp, restTokens1)
-    Just y -> error "Syntax Error: Missing delimiter after attribution statement"
+    Just y -> error "Syntax Error: Missing semicolon after attribution statement"
     _ -> case parseAndB restTokens of
       Just (bExp, TokSemi : restTokens2) ->
         Just (AssignB n bExp, restTokens2)
-      Just _ -> error "Syntax Error: Missing delimiter after attribution statement"
+      Just _ -> error "Syntax Error: Missing semicolon after attribution statement"
       Nothing -> Nothing
-parseNext (TokIf : restTokens) =
+parseStm (TokIf : restTokens) =
   case parseAndB restTokens of 
     Just (expr1, TokThen : restTokens1) -> 
-      case parseNext restTokens1 of 
+      case parseStm restTokens1 of 
         Just (expr2, TokSemi : TokElse : restTokens2) -> 
-          case parseNext restTokens2 of 
+          case parseStm restTokens2 of 
             Just (expr3, TokSemi : restTokens3) ->
               Just (If expr1 [expr2] [expr3], restTokens3)
             _ -> error "No else statement"
         Just (expr2, TokElse : restTokens2) ->
-          case parseNext restTokens2 of  
-            Just (expr3, TokSemi : restTokens3) -> 
+          do trace (show restTokens2)
+            do trace (show (parseStm restTokens2))
+          case parseStm restTokens2 of  
+            Just (expr3, restTokens3) -> 
               Just (If expr1 [expr2] [expr3], restTokens3)
             _ -> error "No semi-column statement"
         Just (expr2, TokSemi : restTokens2) ->
@@ -313,17 +314,19 @@ parseNext (TokIf : restTokens) =
         Just _ -> error "Missing else statement after use of if statement"
     Nothing -> 
       Nothing
-parseNext (TokWhile : restTokens) =
+parseStm (TokWhile : restTokens) =
   case parseAndB restTokens of 
     Just (expr1, TokDo : restTokens1) ->
-      case parseNext restTokens1 of 
+      case parseStm restTokens1 of 
         Just(expr2, TokSemi : restTokens2) ->
           Just(While expr1 [expr2], restTokens2)
         _ -> error "No while do body"
     Just _ -> error "Missing do statement after use of while statement"
     Nothing ->Nothing
 
-parseStatement _ = error "Syntax Error: Invalid statement"
+parseStm t = 
+
+  error "Syntax Error: Invalid statement"
 
 -- To help you test your parser
 testParser :: String -> (String, String)
