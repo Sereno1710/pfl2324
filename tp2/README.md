@@ -57,7 +57,9 @@ stack2Str stack = intercalate "," (map (\x -> case x of
   stack)
 
 state2Str :: State -> String
-state2Str state = intercalate "," (map (\(x,y) -> x ++ "=" ++ show y) (Map.toList state))```
+state2Str state = intercalate "," (map (\(x,y) -> x ++ "=" ++ show y) (Map.toList state))
+
+```
 
 
 #### Run
