@@ -1,9 +1,4 @@
--- PFL 2023/24 - Haskell practical assignment quickstart
--- Updated on 15/12/2023
-
 -- Part 1
-
--- Do not modify our definition of Inst and Code
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# HLINT ignore "Eta reduce" #-}
 {-# LANGUAGE BlockArguments #-}
@@ -13,7 +8,7 @@ import Data.Bool
 import Data.Char (isDigit, isAlpha, isAlphaNum)
 import qualified Data.Map as Map
 
-
+-- Do not modify our definition of Inst and Code
 data Inst =
   Push Integer | Add | Mult | Sub | Tru | Fals | Equ | Le | And | Neg | Fetch String | Store String | Noop |
   Branch Code Code | Loop Code Code
@@ -103,9 +98,7 @@ testAssembler code = (stack2Str stack, state2Str state)
 
 -- Part 2
 
--- TODO: Define the types Aexp, Bexp, Stm and Program
-
-data Aexp = N Integer | V String | AddA Aexp Aexp | SubA Aexp Aexp | MultA Aexp Aexp deriving Show
+data Aexp = IntLit Integer | VarLit String | Add Aexp Aexp | Sub Aexp Aexp | Mult Aexp Aexp deriving Show
 
 data Bexp = IntEq Aexp Aexp | BoolEq Bexp Bexp | Leq Aexp Aexp | AndB Bexp Bexp | NegB Bexp | TruB | FalsB | L Aexp Aexp | G Aexp Aexp | Geq Aexp Aexp deriving Show
 
@@ -143,7 +136,31 @@ compile (AssignB x b:xs) = compB b ++ [Store x] ++ compile xs
 compile (Seq s:xs) = compile s ++ compile xs
 
 
-data Token = TokIf | TokThen | TokElse | TokWhile | TokDo | TokAssign | TokSemi | TokLParen | TokRParen | TokInt Integer | TokVar String | TokPlus | TokMinus | TokMult | TokDiv | TokBEq | TokIEq | TokLeq | TokL | TokG| TokGeq | TokAnd | TokNot | TokTrue | TokFalse deriving (Show, Eq)
+data Token = TokIf 
+  | TokThen 
+  | TokElse 
+  | TokWhile 
+  | TokDo 
+  | TokAssign 
+  | TokSemi 
+  | TokLParen 
+  | TokRParen 
+  | TokInt Integer 
+  | TokVar String 
+  | TokPlus 
+  | TokMinus 
+  | TokMult 
+  | TokDiv 
+  | TokBEq 
+  | TokIEq 
+  | TokLeq 
+  | TokL 
+  | TokG 
+  | TokGeq 
+  | TokAnd 
+  | TokNot 
+  | TokTrue 
+  | TokFalse deriving (Show, Eq)
 
 lexer :: String -> [Token]
 lexer [] = []
@@ -185,16 +202,44 @@ parse text =  parseProgram (lexer text) []
 parseProgram :: [Token] -> Program -> Program
 parseProgram [] program = program
 parseProgram tokens program =
-  case parseStatement tokens of
+  case parseNext tokens of
     Just (statement, restTokens) -> parseProgram restTokens (program ++ [statement])
     Nothing -> error "Parse error"
 
 parseInt :: [Token] -> Maybe (Expr, [Token])
-parseInt (IntTok n : restTokens)
+parseInt (TokInt n : restTokens)
   = Just (IntLit n, restTokens)
 parseInt tokens
   = Nothing
 
+parseProdOrInt :: [Token] -> Maybe (Expr, [Token])
+parseProdOrInt tokens
+  = case parseInt tokens of
+    Just (expr1, (TokMult : restTokens1)) ->
+      case parseProdOrInt restTokens1 of
+        Just (expr2, restTokens2) ->
+          Just (Mult expr1 expr2, restTokens2)
+        Nothing -> Nothing
+    result -> result
+
+
+
+parseNext :: [Token] -> Maybe (Stm, [Token])
+parseNext (TokVar : TokAssign : restTokens) =
+
+parseNext (TokIf : restTokens) =
+  case parseAndB restTokens of 
+    Just (expr1, TokThen : restTokens1) ->
+
+parseNext (TokWhile : restTokens) =
+  case parseAndB restTokens of 
+    Just (expr1, TokDo : restTokens1) ->
+      case parseNext restTokens1 of 
+        Just(expr2, TokSemi : restTokens2)
+          Just(While expr1 expr2, restTokens2)
+        _ -> error "No while do body"
+    Just _ -> error "Missing do statement after use of while statement"
+    Nothing ->Nothing
 
 -- To help you test your parser
 testParser :: String -> (String, String)
