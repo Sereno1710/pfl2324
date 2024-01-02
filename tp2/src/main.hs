@@ -2,7 +2,7 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# HLINT ignore "Eta reduce" #-}
 {-# LANGUAGE BlockArguments #-}
-
+import Debug.Trace
 import Data.List (intercalate)
 import Data.Bool
 import Data.Char (isDigit, isAlpha, isAlphaNum)
@@ -98,7 +98,7 @@ testAssembler code = (stack2Str stack, state2Str state)
 
 -- Part 2
 
-data Aexp = IntLit Integer | VarLit String | Add Aexp Aexp | Sub Aexp Aexp | Mult Aexp Aexp deriving Show
+data Aexp = IntLit Integer | VarLit String | AddA Aexp Aexp | SubA Aexp Aexp | MultA Aexp Aexp deriving Show
 
 data Bexp = IntEq Aexp Aexp | BoolEq Bexp Bexp | Leq Aexp Aexp | AndB Bexp Bexp | NegB Bexp | TruB | FalsB | L Aexp Aexp | G Aexp Aexp | Geq Aexp Aexp deriving Show
 
@@ -107,8 +107,8 @@ data Stm = If Bexp [Stm] [Stm] | While Bexp [Stm] | Assign String Aexp | AssignB
 type Program = [Stm]
 
 compA :: Aexp -> Code
-compA (N n) = [Push n]
-compA (V x) = [Fetch x]
+compA (IntLit n) = [Push n]
+compA (VarLit x) = [Fetch x]
 compA (AddA a1 a2) = compA a2 ++ compA a1 ++ [Add]
 compA (SubA a1 a2) = compA a2 ++ compA a1 ++ [Sub]
 compA (MultA a1 a2) = compA a2 ++ compA a1 ++ [Mult]
@@ -118,9 +118,6 @@ compB :: Bexp -> Code
 compB (IntEq a1 a2) = compA a2 ++ compA a1 ++ [Equ]
 compB (BoolEq b1 b2) = compB b2 ++ compB b1 ++ [Equ]
 compB (Leq a1 a2) = compA a2 ++ compA a1 ++ [Le]
-compB (L a1 a2) = compA a2 ++ compA a1 ++ [Le, Neg]
-compB (G a1 a2) = compA a2 ++ compA a1 ++ [Le, Neg]
-compB (Geq a1 a2) = compA a2 ++ compA a1 ++ [Le, Neg, Equ]
 compB (AndB b1 b2) = compB b2 ++ compB b1 ++ [And]
 compB (NegB b) = compB b ++ [Neg]
 compB TruB = [Tru]
@@ -160,6 +157,7 @@ data Token = TokIf
   | TokAnd 
   | TokNot 
   | TokTrue 
+  | TokDiff
   | TokFalse deriving (Show, Eq)
 
 lexer :: String -> [Token]
@@ -175,15 +173,17 @@ lexer (';':string) = TokSemi : lexer string
 lexer ('+':string) = TokPlus : lexer string
 lexer ('-':string) = TokMinus : lexer string
 lexer ('*':string) = TokMult : lexer string
-lexer ('=':'=':string) = TokBEq : lexer string
+lexer ('=': string) = TokBEq : lexer string
+lexer ('=':'=':string) = TokIEq : lexer string
 lexer (':':'=':string) = TokAssign : lexer string
 lexer ('>':'=':string) = TokGeq : lexer string
 lexer ('<':'=':string) = TokLeq : lexer string
 lexer ('<':string) = TokL : lexer string
 lexer ('>':string) = TokG : lexer string
 lexer ('&':'&':string) = TokAnd : lexer string
-lexer ('!':'=':string) = TokIEq : lexer string
+lexer ('!':'=':string) = TokDiff : lexer string
 lexer ('!':string) = TokNot : lexer string
+lexer ('n':'o':'t':string) = TokNot : lexer string
 lexer ('i':'f':string) = TokIf : lexer string
 lexer ('t':'h':'e':'n':string) = TokThen : lexer string
 lexer ('e':'l':'s':'e':string) = TokElse : lexer string
@@ -206,40 +206,124 @@ parseProgram tokens program =
     Just (statement, restTokens) -> parseProgram restTokens (program ++ [statement])
     Nothing -> error "Parse error"
 
-parseInt :: [Token] -> Maybe (Expr, [Token])
-parseInt (TokInt n : restTokens)
-  = Just (IntLit n, restTokens)
-parseInt tokens
-  = Nothing
+parseValue :: [Token] -> Maybe (Aexp, [Token])
+parseValue (TokInt n : restTokens) = Just (IntLit n, restTokens)
+parseValue (TokVar x : restTokens) = Just (VarLit x, restTokens)
+parseValue (TokLParen : restTokens) =
+  case parseAdd restTokens of
+    Just (expr, TokRParen : restTokens1) -> Just (expr, restTokens1)
+    _ -> Nothing
+parseValue tokens = Nothing
 
-parseProdOrInt :: [Token] -> Maybe (Expr, [Token])
-parseProdOrInt tokens
-  = case parseInt tokens of
-    Just (expr1, (TokMult : restTokens1)) ->
-      case parseProdOrInt restTokens1 of
-        Just (expr2, restTokens2) ->
-          Just (Mult expr1 expr2, restTokens2)
+parseMult :: [Token] -> Maybe (Aexp, [Token])
+parseMult tokens =
+  case parseValue tokens of
+    Just (expr1, TokMult : restTokens) ->
+      case parseMult restTokens of
+        Just (expr2, restTokens1) -> Just (MultA expr1 expr2, restTokens1)
+        _ -> Nothing
+    expr -> expr
+
+parseAdd :: [Token] -> Maybe (Aexp, [Token])
+parseAdd tokens =
+  case parseMult tokens of
+    Just (expr1, TokPlus : restTokens) ->
+      case parseAdd restTokens of
+        Just (expr2, restTokens1) -> Just (AddA expr1 expr2, restTokens1)
+        _ -> Nothing
+    Just (expr1, TokMinus : restTokens) ->
+      case parseAdd restTokens of
+        Just (expr2, restTokens1) -> Just (SubA expr1 expr2, restTokens1)
+        _ -> Nothing
+    expr -> expr
+
+parseLEq :: [Token] -> Maybe (Bexp, [Token])
+parseLEq (TokTrue : restTokens) = Just (TruB, restTokens)
+parseLEq (TokFalse : restTokens) = Just (FalsB, restTokens)
+parseLEq (TokLParen : restTokens) =
+  case parseAndB restTokens of
+    Just (expr, TokRParen : restTokens1) -> Just (expr, restTokens1)
+    _ -> error "Missing right parenthesis"
+parseLEq restTokens =
+  case parseAdd restTokens of
+    Just (expr1, TokLeq : restTokens1) ->
+      case parseAdd restTokens1 of
+        Just (expr2, restTokens2) -> Just (Leq expr1 expr2, restTokens2)
+        _ -> error "Missing right operand after TokLeq"
+    Just (expr1, TokIEq : restTokens1) ->
+      case parseAdd restTokens1 of
+        Just (expr2, restTokens2) -> Just (IntEq expr1 expr2, restTokens2)
+        _ -> error "Missing right operand after TokIEq"
+    _ -> Nothing
+
+
+parseNot :: [Token] -> Maybe (Bexp, [Token])
+parseNot tokens =
+  case parseLEq tokens of
+    Just (expr1, TokNot : restTokens) -> Just (NegB expr1, restTokens)
+    expr -> expr
+parseNot tokens = parseLEq tokens
+
+
+parseBEq :: [Token] -> Maybe (Bexp, [Token])
+parseBEq tokens =
+  case parseNot tokens of
+    Just (expr1, TokBEq : restTokens) ->
+      case parseBEq restTokens of
+        Just (expr2, restTokens1) -> Just (BoolEq expr1 expr2, restTokens1)
         Nothing -> Nothing
-    result -> result
-
-
+    expr -> expr
+    
+parseAndB :: [Token] -> Maybe (Bexp, [Token])
+parseAndB tokens =
+  case parseBEq tokens of
+    Just (expr1, TokAnd : restTokens) ->
+      case parseAndB restTokens of
+        Just (expr2, restTokens1) -> Just (AndB expr1 expr2, restTokens1)
+        Nothing -> Nothing 
+    expr -> expr
 
 parseNext :: [Token] -> Maybe (Stm, [Token])
-parseNext (TokVar : TokAssign : restTokens) =
-
+parseNext (TokVar n : TokAssign : restTokens) =
+  case parseAdd restTokens of
+    Just (aExp, TokSemi : restTokens1) ->
+      Just (Assign n aExp, restTokens1)
+    Just y -> error "Syntax Error: Missing delimiter after attribution statement"
+    _ -> case parseAndB restTokens of
+      Just (bExp, TokSemi : restTokens2) ->
+        Just (AssignB n bExp, restTokens2)
+      Just _ -> error "Syntax Error: Missing delimiter after attribution statement"
+      Nothing -> Nothing
 parseNext (TokIf : restTokens) =
   case parseAndB restTokens of 
-    Just (expr1, TokThen : restTokens1) ->
-
+    Just (expr1, TokThen : restTokens1) -> 
+      case parseNext restTokens1 of 
+        Just (expr2, TokSemi : TokElse : restTokens2) -> 
+          case parseNext restTokens2 of 
+            Just (expr3, TokSemi : restTokens3) ->
+              Just (If expr1 [expr2] [expr3], restTokens3)
+            _ -> error "No else statement"
+        Just (expr2, TokElse : restTokens2) ->
+          case parseNext restTokens2 of  
+            Just (expr3, TokSemi : restTokens3) -> 
+              Just (If expr1 [expr2] [expr3], restTokens3)
+            _ -> error "No semi-column statement"
+        Just (expr2, TokSemi : restTokens2) ->
+          Just (If expr1 [expr2] [], restTokens2)
+        Just _ -> error "Missing else statement after use of if statement"
+    Nothing -> 
+      Nothing
 parseNext (TokWhile : restTokens) =
   case parseAndB restTokens of 
     Just (expr1, TokDo : restTokens1) ->
       case parseNext restTokens1 of 
-        Just(expr2, TokSemi : restTokens2)
-          Just(While expr1 expr2, restTokens2)
+        Just(expr2, TokSemi : restTokens2) ->
+          Just(While expr1 [expr2], restTokens2)
         _ -> error "No while do body"
     Just _ -> error "Missing do statement after use of while statement"
     Nothing ->Nothing
+
+parseStatement _ = error "Syntax Error: Invalid statement"
 
 -- To help you test your parser
 testParser :: String -> (String, String)

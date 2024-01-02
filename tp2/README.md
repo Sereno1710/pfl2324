@@ -1,6 +1,7 @@
 # TP2 - PFL 23/24
 
 ## Group Information
+
 - **Group**: T03_G05
 
 | Student number | Full name                  | Contribution |
@@ -10,10 +11,12 @@
   
 ## 1st Part
 
-In this part of the assignement, we were asked to implement a stack-based machine.
+In this part of the assignement, we were asked to implement a low-level machine with configurations of the form (c, e, s) where c is a list
+of instructions (or code) to be executed, e is the evaluation stack, and s is the storage. We use the evaluation stack to evaluate arithmetic (composed of integer numbers only, which can positive or negative) and boolean expressions.
 
-#### Stack 
+### Evaluation Stack
 
+We started by defining the evaluation stack as a list of StackElements, a data type we created with two constructors `VInt` and `VBool` to represent integer and boolean values.
 
 ```haskell
 data StackElements = VInt Integer | VBool Bool
@@ -29,26 +32,24 @@ createEmptyStack :: Stack
 createEmptyStack = []
 ```
 
-#### State
+### Storage
 
-To facilitate operations involving the state, the implementation of the state was done using Data.Map library, which allows us to use a Map to represent the state.
+To facilitate operations involving the storage, the implementation of the State type was done using Data.Map library, which allows us to map variable names to their respective values.
 
 ```haskell
 type State = Map.Map String StackElements
 
 createEmptyState :: State
 createEmptyState = Map.empty
-
 ```
 
-#### Conversion to String
+### Conversion to String
 
 - The `stack2Str` function converts a `Stack` to a `String` by mapping the `StackElement` to a `String` and then concatenating the resulting list of `Strings`. Using the `intercalate` function from the `Data.List` library, we can add a comma between each element of the list.
 
-- The `state2Str` function converts a `State` to a `String` by mapping the `StackElement` to a `String` and then concatenating the resulting list of `String`s. Using the `intercalate` function from the `Data.List` library, we can add a comma between each element of the list. The `Map` is converted to a list of tuples using the `toList` function from the `Data.Map` library. The list of tuples is then mapped to a list of `String`s, where each `String` is a tuple of the form `(key, value)`. 
+- The `state2Str` function converts a `State` to a `String` by mapping the `StackElement` to a `String` and then concatenating the resulting list of `String`s. Using the `intercalate` function from the `Data.List` library, we can add a comma between each element of the list. The `Map` is converted to a list of tuples using the `toList` function from the `Data.Map` library. The list of tuples is then mapped to a list of `String`s, where each `String` is a tuple of the form `(key, value)`.
 
 ```haskell
-
 stack2Str :: Stack -> String
 stack2Str [] = ""
 stack2Str stack = intercalate "," (map (\x -> case x of 
@@ -58,18 +59,15 @@ stack2Str stack = intercalate "," (map (\x -> case x of
 
 state2Str :: State -> String
 state2Str state = intercalate "," (map (\(x,y) -> x ++ "=" ++ show y) (Map.toList state))
-
 ```
 
+### Run
 
-#### Run
+The `run` function is the main function of the this part of the assignment. It takes a tuple of the form `(Code,Stack,State)` and returns a tuple of the same form. Here we use pattern matching to match the different instructions and perform the corresponding operations.
 
-The `run` function is the main function of the this part of the assignment. It takes a tuple of the form `(Code,Stack,State)` and returns a tuple of the same form. Here we use pattern matching to match the different instructions and perform the corresponding operations. 
-
-The `run` function is called recursively until the `Code` is empty and the final result is returned with all changes made to the stack and the state. In case of an error, the `run` function returns the error message. 
+The `run` function is called recursively until the `Code` is empty and the final result is returned with all changes made to the stack and the state. In case of a run-time error, the `run` function returns the error message.
 
 ```haskell
-
 run :: (Code, Stack, State) -> (Code, Stack, State)
 run ([],stack,state) = ([],stack,state)
 run ((Push n):code, stack, state) = run (code, VInt n : stack , state)
@@ -92,26 +90,34 @@ run (Branch code1 code2:code,(VBool True):stack,state) = run (code1 ++ code, sta
 run (Branch code1 code2:code,(VBool False):stack,state) = run (code2 ++ code, stack, state)
 run (Loop code1 code2:code,stack,state) = run (code1 ++ [Branch (code2 ++ [Loop code1 code2]) [Noop]] ++ code, stack, state)
 run (_,_,_) = error "Run-time error"
-
 ```
 
-#### Example Execution
-- Example 1: testAssembler [Push 10,Push 4,Push 3,Sub,Mult] == ("-10","")
-- Example 2: testAssembler [Push 5,Store "x",Push 1,Fetch "x",Sub,Store "x"] == ("","x=4")
+### Example Execution
 
-# 2nd Part
+```haskell
+testAssembler [Push 10,Push 4,Push 3,Sub,Mult] 
+Output: ("-10","")
+```
 
-In this part of the assignment, we were asked to implement a compiler for a simple imperative language. The compiler should translate a program written in the imperative language to a stack-based machine code.
+```haskell
+testAssembler [Push 5,Store "x",Push 1,Fetch "x",Sub,Store "x"] 
+Output: ("","x=4")
+```
+
+## 2nd Part
+
+In this part of the assignment, we were asked to implement a compiler for a simple imperative language. The compiler should translate a program written in the imperative language to the machine code we created in part 1.
 
 For that to be possible, it was necessary to implement a lexer and a parser for the imperative language. As well as a compiler that translates the imperative language to a stack-based machine code.
+
+### Compiler
 
 This compiler requires the use of `Aexp`, `Bexp` and `Stm` data types. The `Aexp` data type represents arithmetic expressions, the `Bexp` data type represents boolean expressions and the `Stm` data type represents statements.
 
 #### Arithmetic Expressions
 
-
 ```haskell
-data Aexp = N Integer | V String | AddA Aexp Aexp | SubA Aexp Aexp | MultA Aexp Aexp deriving Show
+data Aexp = IntLit Integer | VarLit String | AddA Aexp Aexp | SubA Aexp Aexp | MultA Aexp Aexp deriving Show
 
 compA :: Aexp -> Code
 compA (N n) = [Push n]
@@ -119,13 +125,11 @@ compA (V x) = [Fetch x]
 compA (AddA a1 a2) = compA a2 ++ compA a1 ++ [Add]
 compA (SubA a1 a2) = compA a2 ++ compA a1 ++ [Sub]
 compA (MultA a1 a2) = compA a2 ++ compA a1 ++ [Mult]
-
 ```
 
 #### Boolean Expressions
 
 ```haskell
-
 data Bexp = IntEq Aexp Aexp | BoolEq Bexp Bexp | Leq Aexp Aexp | AndB Bexp Bexp | NegB Bexp | TruB | FalsB | L Aexp Aexp | G Aexp Aexp | Geq Aexp Aexp deriving Show
 
 compB :: Bexp -> Code
@@ -139,13 +143,13 @@ compB (AndB b1 b2) = compB b2 ++ compB b1 ++ [And]
 compB (NegB b) = compB b ++ [Neg]
 compB TruB = [Tru]
 compB FalsB = [Fals]
-    
 ```
 
 #### Statements
 
-```haskell
+This language features if/else statements as well as while loops.
 
+```haskell
 data Stm = If Bexp [Stm] [Stm] | While Bexp [Stm] | Assign String Aexp | AssignB String Bexp | Seq [Stm] deriving Show
 
 compile :: Program -> Code
@@ -156,22 +160,23 @@ compile (While b s:xs) = [Loop (compB b) (compile s)] ++ compile xs
 compile (Assign x a:xs) = compA a ++ [Store x] ++ compile xs
 compile (AssignB x b:xs) = compB b ++ [Store x] ++ compile xs
 compile (Seq s:xs) = compile s ++ compile xs
-
-```
-
-### Tokens
-
-`Token` data type to represent the different tokens of the imperative language.
-
-This data type is used in the lexer to represent the different tokens of the imperative language.
-
-```haskell
-data Token = TokIf | TokThen | TokElse | TokWhile | TokDo | TokAssign | TokSemi | TokLParen | TokRParen | TokInt Integer | TokVar String | TokPlus | TokMinus | TokMult | TokDiv | TokBEq | TokIEq | TokLeq | TokL | TokG| TokGeq | TokAnd | TokNot | TokTrue | TokFalse deriving (Show, Eq)
 ```
 
 ### Lexer
 
 Lexer is used as a way to split the string into tokens, which are then used by the parser to parse the imperative language. To do this, we use pattern matching to match the different tokens and perform the corresponding operations. To facilitate the creation of negative numbers, we use the pattern matching to match the `(-` token and then add a `0 -` to the initial string.
+
+#### Tokens
+
+The `Token` data type is used to represent the different symbols and keywords of our imperative language.
+
+```haskell
+data Token = TokIf | TokThen | TokElse | TokWhile | TokDo | TokAssign | TokSemi | TokLParen | TokRParen | TokInt Integer | TokVar String | TokPlus | TokMinus | TokMult | TokDiv | TokBEq | TokIEq | TokLeq | TokL | TokG| TokGeq | TokAnd | TokNot | TokTrue | TokFalse deriving (Show, Eq)
+```
+
+#### Lexing
+
+During lexing, we convert the statement string to a list of Tokens, discarding all whitespace that we find, since it doesn't contribute to the meaning of the tokenised expression.
 
 ```haskell
 lexer :: String -> [Token]
@@ -209,15 +214,16 @@ lexer (char:string)
   | otherwise = error ("Cannot parse " ++ [char])
 ```
 
+### Parser
 
-## Parser
 - Parse imperative programs from a string.
 - Function: `parse :: String -> [Stm]`
 
 ### Syntactic Constraints
-- Statements end with a semicolon.
-- Variables start with a lowercase letter.
+
+We implemented some syntatic constraints in our parser, which include:
+
+- Statements must end with a semicolon.
+- Variables must start with a lowercase letter.
 - Operator precedence for arithmetic and boolean expressions.
 - Parentheses for priority.
-
-
