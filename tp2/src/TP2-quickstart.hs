@@ -186,26 +186,14 @@ parseProgram :: [Token] -> Program -> Program
 parseProgram [] program = program
 parseProgram tokens program =
   case parseStatement tokens of
-    Just (statement, tokens') -> parseProgram tokens' (program ++ [statement])
+    Just (statement, restTokens) -> parseProgram restTokens (program ++ [statement])
     Nothing -> error "Parse error"
 
-parseStatement :: [Token] -> Maybe (Stm, [Token])
-parseStatement (TokIf : tokens) =
-    case parseBexp tokens of
-        Just (bexp, TokThen : tokens') ->
-            case parseProgram tokens' [] of
-                Just (program1, tokens'') ->
-                    case tokens'' of
-                        (TokElse : tokens''') ->
-                            case parseProgram tokens''' [] of
-                                Just (program2, tokens'''') ->
-                                    Just (If bexp program1 program2, tokens'''')
-                                _ -> Nothing
-                        _ -> Nothing
-                _ -> Nothing
-        _ -> Nothing
-parseStatement _ = Nothing
-
+parseInt :: [Token] -> Maybe (Expr, [Token])
+parseInt (IntTok n : restTokens)
+  = Just (IntLit n, restTokens)
+parseInt tokens
+  = Nothing
 
 
 -- To help you test your parser
